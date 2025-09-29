@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "root",
+    "password": "Root7878",
+    "database": "healthcare_db",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": "Root7878",
+    "database": "healthcare_db_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": "Root7878",
+    "database": "healthcare_db",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
