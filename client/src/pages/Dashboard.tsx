@@ -34,16 +34,30 @@ const Dashboard: React.FC = () => {
   const { data: patientStats, isLoading: patientLoading } = useQuery<DashboardStats>({
     queryKey: ['patient-dashboard-stats', user?.id],
     queryFn: async () => {
-      // First get the patient profile to get the patient ID
-      const patientResponse = await axios.get('/patients/profile');
-      const patientId = patientResponse.data.data.patient.id;
-      
-      // Then get the dashboard stats using the patient ID
-      const response = await axios.get(`/patients/${patientId}/dashboard/stats`);
-      return response.data.data.stats;
+      try {
+        // First get the patient profile to get the patient ID
+        const patientResponse = await axios.get('/patients/profile');
+        const patientId = patientResponse.data.data.patient.id;
+        
+        // Then get the dashboard stats using the patient ID
+        const response = await axios.get(`/patients/${patientId}/dashboard/stats`);
+        return response.data.data.stats;
+      } catch (error) {
+        console.error('Error fetching patient dashboard stats:', error);
+        // Return default stats if API fails
+        return {
+          totalAppointments: 0,
+          todayAppointments: 0,
+          completedAppointments: 0,
+          pendingAppointments: 0,
+          requestedAppointments: 0,
+          scheduledAppointments: 0
+        };
+      }
     },
     enabled: user?.role === 'patient' && !!user?.id,
-    refetchInterval: 10000, // Refetch every 10 seconds for real-time updates
+    refetchInterval: 30000, // Refetch every 30 seconds instead of 10
+    retry: 2, // Retry failed requests
   });
 
   const { data: doctorStats, isLoading: doctorLoading } = useQuery<DashboardStats>({
@@ -58,7 +72,7 @@ const Dashboard: React.FC = () => {
       return response.data.data.stats;
     },
     enabled: user?.role === 'doctor' && !!user?.id,
-    refetchInterval: 10000, // Refetch every 10 seconds for real-time updates
+    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
   });
 
   const getStats = () => {

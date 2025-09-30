@@ -25,6 +25,8 @@ interface Appointment {
   reason: string;
   symptoms: string;
   notes: string;
+  diagnosis: string;
+  prescription: string;
   startedAt?: string;
   completedAt?: string;
   patient: {
@@ -517,6 +519,31 @@ const DoctorAppointments: React.FC = () => {
                       <div>
                         <label className="text-sm font-medium text-gray-500">Symptoms</label>
                         <p className="text-gray-900">{selectedAppointment.symptoms}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Doctor's Notes, Diagnosis & Prescription */}
+                <div className="col-span-full space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Medical Details</h3>
+                  <div className="space-y-4">
+                    {selectedAppointment.notes && (
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <label className="text-sm font-medium text-green-900">Doctor's Notes</label>
+                        <p className="text-green-800 mt-1">{selectedAppointment.notes}</p>
+                      </div>
+                    )}
+                    {selectedAppointment.diagnosis && (
+                      <div className="bg-purple-50 p-4 rounded-lg">
+                        <label className="text-sm font-medium text-purple-900">Diagnosis</label>
+                        <p className="text-purple-800 mt-1">{selectedAppointment.diagnosis}</p>
+                      </div>
+                    )}
+                    {selectedAppointment.prescription && (
+                      <div className="bg-indigo-50 p-4 rounded-lg">
+                        <label className="text-sm font-medium text-indigo-900">Prescription</label>
+                        <p className="text-indigo-800 mt-1">{selectedAppointment.prescription}</p>
                       </div>
                     )}
                   </div>

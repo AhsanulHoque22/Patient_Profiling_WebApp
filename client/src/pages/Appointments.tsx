@@ -37,7 +37,7 @@ const Appointments: React.FC = () => {
       return response.data.data.appointments || [];
     },
     enabled: !!user?.id,
-    refetchInterval: 5000, // Refetch every 5 seconds to get real-time updates
+    refetchInterval: 30000, // Refetch every 30 seconds to get real-time updates
   });
 
   // Filter and sort appointments
