@@ -528,124 +528,232 @@ const Appointments: React.FC = () => {
 
       {/* View Appointment Modal */}
       {showViewModal && selectedAppointment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Appointment Details</h2>
-              <button 
-                onClick={() => setShowViewModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Appointment Serial & Date */}
-              <div className="bg-primary-50 p-4 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-primary-900">
-                      Serial #{selectedAppointment.serialNumber}
-                    </h3>
-                    <p className="text-primary-700">
-                      {new Date(selectedAppointment.appointmentDate).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-semibold text-primary-900">
-                      {selectedAppointment.appointmentTime}
-                    </p>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      selectedAppointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                      selectedAppointment.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
-                      selectedAppointment.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                      selectedAppointment.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {selectedAppointment.status.charAt(0).toUpperCase() + selectedAppointment.status.slice(1)}
-                    </span>
-                  </div>
-                </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Appointment Details
+                </h2>
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Patient Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Patient Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Name</label>
+                      <p className="text-gray-900">
+                        {selectedAppointment.patient?.user?.firstName} {selectedAppointment.patient?.user?.lastName}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Email</label>
+                      <p className="text-gray-900">{selectedAppointment.patient?.user?.email}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Phone</label>
+                      <p className="text-gray-900">{selectedAppointment.patient?.user?.phone || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Blood Type</label>
+                      <p className="text-gray-900">{selectedAppointment.patient?.bloodType || 'Not provided'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Appointment Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Appointment Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Date</label>
+                      <p className="text-gray-900">
+                        {new Date(selectedAppointment.appointmentDate).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Time</label>
+                      <p className="text-gray-900">{selectedAppointment.appointmentTime}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Serial Number</label>
+                      <p className="text-gray-900">#{selectedAppointment.serialNumber}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Type</label>
+                      <p className="text-gray-900 capitalize">{selectedAppointment.type.replace('_', ' ')}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Status</label>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        selectedAppointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                        selectedAppointment.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                        selectedAppointment.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                        selectedAppointment.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                        selectedAppointment.status === 'in_progress' ? 'bg-purple-100 text-purple-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {selectedAppointment.status === 'in_progress' ? 'In Progress' : 
+                         selectedAppointment.status.charAt(0).toUpperCase() + selectedAppointment.status.slice(1)}
+                      </span>
+                    </div>
+                    {selectedAppointment.status === 'completed' && selectedAppointment.startedAt && selectedAppointment.completedAt && (
+                      <>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Started At</label>
+                          <p className="text-gray-900">
+                            {new Date(selectedAppointment.startedAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Completed At</label>
+                          <p className="text-gray-900">
+                            {new Date(selectedAppointment.completedAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Total Duration</label>
+                          <p className="text-green-700 font-semibold">
+                            {(() => {
+                              const start = new Date(selectedAppointment.startedAt);
+                              const end = new Date(selectedAppointment.completedAt);
+                              const diffMs = end.getTime() - start.getTime();
+                              const diffMins = Math.floor(diffMs / 60000);
+                              const hours = Math.floor(diffMins / 60);
+                              const mins = diffMins % 60;
+                              return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+                            })()}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
                 {/* Doctor Information */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-2">Doctor</h4>
-                  <p className="text-gray-700">
-                    Dr. {selectedAppointment.doctor?.user?.firstName} {selectedAppointment.doctor?.user?.lastName}
-                  </p>
-                  <p className="text-sm text-gray-600 capitalize">
-                    {selectedAppointment.doctor?.specialization?.replace('_', ' ')}
-                  </p>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Doctor Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Name</label>
+                      <p className="text-gray-900">
+                        Dr. {selectedAppointment.doctor?.user?.firstName} {selectedAppointment.doctor?.user?.lastName}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Specialization</label>
+                      <p className="text-gray-900 capitalize">
+                        {selectedAppointment.doctor?.specialization?.replace('_', ' ') || 'General Practice'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">BMDC Registration</label>
+                      <p className="text-gray-900">{selectedAppointment.doctor?.bmdcRegistrationNumber || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Experience</label>
+                      <p className="text-gray-900">{selectedAppointment.doctor?.experience || 0} years</p>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Appointment Type */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-2">Type</h4>
-                  <p className="text-gray-700 capitalize">
-                    {selectedAppointment.type.replace('_', ' ')}
-                  </p>
+                {/* Medical Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Medical Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Allergies</label>
+                      <p className="text-gray-900">{selectedAppointment.patient?.allergies || 'None reported'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Current Medications</label>
+                      <p className="text-gray-900">{selectedAppointment.patient?.currentMedications || 'None reported'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Medical History</label>
+                      <p className="text-gray-900">{selectedAppointment.patient?.medicalHistory || 'None reported'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reason & Symptoms */}
+                <div className="col-span-full space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Appointment Reason</h3>
+                  <div className="space-y-3">
+                    {selectedAppointment.reason && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Reason</label>
+                        <p className="text-gray-900">{selectedAppointment.reason}</p>
+                      </div>
+                    )}
+                    {selectedAppointment.symptoms && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Symptoms</label>
+                        <p className="text-gray-900">{selectedAppointment.symptoms}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Doctor's Notes, Diagnosis & Prescription */}
+                <div className="col-span-full space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Medical Details</h3>
+                  <div className="space-y-4">
+                    {selectedAppointment.notes && (
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <label className="text-sm font-medium text-green-900">Doctor's Notes</label>
+                        <p className="text-green-800 mt-1">{selectedAppointment.notes}</p>
+                      </div>
+                    )}
+                    {selectedAppointment.diagnosis && (
+                      <div className="bg-purple-50 p-4 rounded-lg">
+                        <label className="text-sm font-medium text-purple-900">Diagnosis</label>
+                        <p className="text-purple-800 mt-1">{selectedAppointment.diagnosis}</p>
+                      </div>
+                    )}
+                    {selectedAppointment.prescription && (
+                      <div className="bg-indigo-50 p-4 rounded-lg">
+                        <label className="text-sm font-medium text-indigo-900">Prescription</label>
+                        <p className="text-indigo-800 mt-1">{selectedAppointment.prescription}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Emergency Contact */}
+                <div className="col-span-full space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Emergency Contact</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Contact Name</label>
+                      <p className="text-gray-900">{selectedAppointment.patient?.emergencyContact || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Contact Phone</label>
+                      <p className="text-gray-900">{selectedAppointment.patient?.emergencyPhone || 'Not provided'}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Reason */}
-              {selectedAppointment.reason && (
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-blue-900 mb-2">Reason for Appointment</h4>
-                  <p className="text-blue-800">{selectedAppointment.reason}</p>
-                </div>
-              )}
-
-              {/* Symptoms */}
-              {selectedAppointment.symptoms && (
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-orange-900 mb-2">Symptoms</h4>
-                  <p className="text-orange-800">{selectedAppointment.symptoms}</p>
-                </div>
-              )}
-
-              {/* Notes */}
-              {selectedAppointment.notes && (
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-green-900 mb-2">Doctor's Notes</h4>
-                  <p className="text-green-800">{selectedAppointment.notes}</p>
-                </div>
-              )}
-
-              {/* Diagnosis */}
-              {selectedAppointment.diagnosis && (
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-purple-900 mb-2">Diagnosis</h4>
-                  <p className="text-purple-800">{selectedAppointment.diagnosis}</p>
-                </div>
-              )}
-
-              {/* Prescription */}
-              {selectedAppointment.prescription && (
-                <div className="bg-indigo-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-indigo-900 mb-2">Prescription</h4>
-                  <p className="text-indigo-800">{selectedAppointment.prescription}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Close button */}
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={() => setShowViewModal(false)}
-                className="btn-outline"
-              >
-                Close
-              </button>
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="btn-outline"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
