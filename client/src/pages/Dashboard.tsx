@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import DashboardMedicineTracker from '../components/DashboardMedicineTracker';
+import MedicineMatrix from '../components/MedicineMatrix';
 import {
   CalendarIcon,
   UserGroupIcon,
@@ -22,13 +24,29 @@ const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Get patient profile for patients
+  const { data: patientProfile } = useQuery({
+    queryKey: ['patient-profile'],
+    queryFn: async () => {
+      const response = await axios.get('/patients/profile');
+      return response.data.data.patient;
+    },
+    enabled: user?.role === 'patient',
+  });
+
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const response = await axios.get('/admin/stats');
+      const response = await axios.get('/admin/stats', {
+        params: { _t: Date.now() } // Cache-busting parameter
+      });
       return response.data.data.stats;
     },
     enabled: user?.role === 'admin',
+    staleTime: 0, // Data is immediately stale
+    gcTime: 0, // Don't cache the data
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchOnMount: true, // Always refetch on mount
   });
 
   const { data: patientStats, isLoading: patientLoading } = useQuery<DashboardStats>({
@@ -40,7 +58,9 @@ const Dashboard: React.FC = () => {
         const patientId = patientResponse.data.data.patient.id;
         
         // Then get the dashboard stats using the patient ID
-        const response = await axios.get(`/patients/${patientId}/dashboard/stats`);
+        const response = await axios.get(`/patients/${patientId}/dashboard/stats`, {
+          params: { _t: Date.now() } // Cache-busting parameter
+        });
         return response.data.data.stats;
       } catch (error) {
         console.error('Error fetching patient dashboard stats:', error);
@@ -56,7 +76,11 @@ const Dashboard: React.FC = () => {
       }
     },
     enabled: user?.role === 'patient' && !!user?.id,
-    refetchInterval: 30000, // Refetch every 30 seconds instead of 10
+    staleTime: 0, // Data is immediately stale
+    gcTime: 0, // Don't cache the data
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchOnMount: true, // Always refetch on mount
+    refetchInterval: 30000, // Refetch every 30 seconds
     retry: 2, // Retry failed requests
   });
 
@@ -68,11 +92,50 @@ const Dashboard: React.FC = () => {
       const doctorId = doctorResponse.data.data.doctor.id;
       
       // Then get the dashboard stats using the doctor ID
-      const response = await axios.get(`/doctors/${doctorId}/dashboard/stats`);
+      const response = await axios.get(`/doctors/${doctorId}/dashboard/stats`, {
+        params: { _t: Date.now() } // Cache-busting parameter
+      });
       return response.data.data.stats;
     },
     enabled: user?.role === 'doctor' && !!user?.id,
+    staleTime: 0, // Data is immediately stale
+    gcTime: 0, // Don't cache the data
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchOnMount: true, // Always refetch on mount
     refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
+  });
+
+  // Fetch recent appointments
+  const { data: recentAppointments } = useQuery({
+    queryKey: ['recent-appointments', user?.id],
+    queryFn: async () => {
+      if (user?.role === 'patient') {
+        const patientResponse = await axios.get('/patients/profile');
+        const patientId = patientResponse.data.data.patient.id;
+        const response = await axios.get(`/patients/${patientId}/appointments`, {
+          params: { limit: 5, sortBy: 'appointmentDate', sortOrder: 'DESC', _t: Date.now() }
+        });
+        return response.data.data.appointments;
+      } else if (user?.role === 'doctor') {
+        const doctorResponse = await axios.get('/doctors/profile');
+        const doctorId = doctorResponse.data.data.doctor.id;
+        const response = await axios.get(`/doctors/${doctorId}/appointments`, {
+          params: { limit: 5, sortBy: 'appointmentDate', sortOrder: 'DESC', _t: Date.now() }
+        });
+        return response.data.data.appointments;
+      } else if (user?.role === 'admin') {
+        const response = await axios.get('/appointments', {
+          params: { limit: 5, sortBy: 'appointmentDate', sortOrder: 'DESC', _t: Date.now() }
+        });
+        return response.data.data.appointments;
+      }
+      return [];
+    },
+    enabled: !!user?.id,
+    staleTime: 0, // Data is immediately stale
+    gcTime: 0, // Don't cache the data
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchOnMount: true, // Always refetch on mount
   });
 
   const getStats = () => {
@@ -180,6 +243,30 @@ const Dashboard: React.FC = () => {
                   <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                 </div>
               ))
+            ) : recentAppointments && recentAppointments.length > 0 ? (
+              recentAppointments.map((appointment: any) => (
+                <div key={appointment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {user?.role === 'patient' 
+                        ? `Dr. ${appointment.doctor?.user?.firstName} ${appointment.doctor?.user?.lastName}`
+                        : `${appointment.patient?.user?.firstName} ${appointment.patient?.user?.lastName}`
+                      }
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(appointment.appointmentDate).toLocaleDateString()} at {appointment.appointmentTime}
+                    </p>
+                  </div>
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    appointment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                    appointment.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                    appointment.status === 'scheduled' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {appointment.status}
+                  </span>
+                </div>
+              ))
             ) : (
               <p className="text-gray-500">No recent appointments found.</p>
             )}
@@ -264,12 +351,12 @@ const Dashboard: React.FC = () => {
                   </div>
                 </button>
                 <button 
-                  onClick={() => navigate('/reports')}
+                  onClick={() => navigate('/admin-lab-reports')}
                   className="w-full text-left px-4 py-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
                 >
                   <div className="flex items-center">
                     <ChartBarIcon className="h-5 w-5 text-purple-600 mr-3" />
-                    <span className="text-purple-700 font-medium">Reports & Analytics</span>
+                    <span className="text-purple-700 font-medium">Lab Reports & Analytics</span>
                   </div>
                 </button>
               </>
@@ -277,6 +364,11 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Medicine Tracker for Patients */}
+      {user?.role === 'patient' && patientProfile?.id && (
+        <MedicineMatrix patientId={patientProfile.id} />
+      )}
     </div>
   );
 };

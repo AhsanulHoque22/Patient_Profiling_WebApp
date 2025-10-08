@@ -6,10 +6,12 @@ import {
   UserIcon,
   CalendarIcon,
   DocumentTextIcon,
+  BeakerIcon,
   UsersIcon,
   CogIcon,
   Bars3Icon,
   XMarkIcon,
+  StarIcon,
 } from '@heroicons/react/24/outline';
 
 const Layout: React.FC = () => {
@@ -19,14 +21,23 @@ const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['patient', 'admin'] },
+    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['patient'] },
     { name: 'Dashboard', href: '/doctor-dashboard', icon: HomeIcon, roles: ['doctor'] },
+    { name: 'Dashboard', href: '/admin-dashboard', icon: HomeIcon, roles: ['admin'] },
     { name: 'Profile', href: '/profile', icon: UserIcon, roles: ['patient'] },
     { name: 'Doctor Profile', href: '/doctor-profile', icon: UserIcon, roles: ['doctor'] },
-    { name: 'Appointments', href: '/appointments', icon: CalendarIcon, roles: ['patient', 'admin'] },
+    { name: 'Appointments', href: '/appointments', icon: CalendarIcon, roles: ['patient'] },
     { name: 'Appointments', href: '/doctor-appointments', icon: CalendarIcon, roles: ['doctor'] },
-    { name: 'Medical Records', href: '/medical-records', icon: DocumentTextIcon, roles: ['patient', 'admin'] },
+  { name: 'Medical Records', href: '/medical-records', icon: DocumentTextIcon, roles: ['patient'] },
+  { name: 'Lab Reports', href: '/lab-reports', icon: BeakerIcon, roles: ['patient'] },
+  { name: 'Find Doctors', href: '/doctors', icon: UsersIcon, roles: ['patient'] },
+    { name: 'My Patients', href: '/patients', icon: UsersIcon, roles: ['doctor'] },
     { name: 'Users', href: '/users', icon: UsersIcon, roles: ['admin'] },
+    { name: 'Doctors', href: '/admin-doctors', icon: UsersIcon, roles: ['admin'] },
+    { name: 'Patients', href: '/admin-patients', icon: UsersIcon, roles: ['admin'] },
+    { name: 'Lab Reports', href: '/admin-lab-reports', icon: BeakerIcon, roles: ['admin'] },
+    { name: 'Lab Tests', href: '/admin-lab-tests', icon: BeakerIcon, roles: ['admin'] },
+    { name: 'Doctor Ratings', href: '/admin-ratings', icon: StarIcon, roles: ['admin'] },
   ];
 
   const filteredNavigation = navigation.filter(item => 
@@ -196,7 +207,11 @@ const Layout: React.FC = () => {
         {/* Page content */}
         <main className="py-6">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <Outlet />
+            <div className="flex justify-center">
+              <div className="w-full max-w-6xl">
+                <Outlet />
+              </div>
+            </div>
           </div>
         </main>
       </div>

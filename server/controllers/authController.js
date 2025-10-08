@@ -1,11 +1,13 @@
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 const { User, Patient, Doctor } = require('../models');
 
 // Generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET || 'your-secret-key', {
-    expiresIn: process.env.JWT_EXPIRE || '7d'
+    expiresIn: process.env.JWT_EXPIRE || '30d'
   });
 };
 
@@ -21,7 +23,7 @@ const register = async (req, res, next) => {
       });
     }
 
-    const { email, password, firstName, lastName, phone, dateOfBirth, gender, address, role, bmdcRegistrationNumber, specialization, experience } = req.body;
+    const { email, password, firstName, lastName, phone, dateOfBirth, gender, address, role, bmdcRegistrationNumber, department, experience } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
@@ -52,7 +54,7 @@ const register = async (req, res, next) => {
       await Doctor.create({ 
         userId: user.id,
         bmdcRegistrationNumber,
-        specialization,
+        department,
         experience: experience ? parseInt(experience) : null
       });
     }
@@ -256,10 +258,186 @@ const changePassword = async (req, res, next) => {
   }
 };
 
+// Email transporter configuration
+const createTransporter = () => {
+  return nodemailer.createTransporter({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: process.env.SMTP_PORT || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+};
+
+// Forgot password
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'No account found with that email address'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Save reset token to user
+    await user.update({
+      resetPasswordToken: resetToken,
+      resetPasswordExpires: resetTokenExpires
+    });
+
+    // Create reset URL
+    const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+
+    // Email content
+    const message = `
+      <h2>Password Reset Request</h2>
+      <p>Hello ${user.firstName},</p>
+      <p>You requested a password reset for your HealthCare account.</p>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #3B82F6; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
+      <p>This link will expire in 10 minutes.</p>
+      <p>If you didn't request this, please ignore this email.</p>
+      <p>Best regards,<br>HealthCare Team</p>
+    `;
+
+    // Send email (only if SMTP is configured)
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      try {
+        const transporter = createTransporter();
+        await transporter.sendMail({
+          from: process.env.FROM_EMAIL || 'noreply@healthcare.com',
+          to: user.email,
+          subject: 'Password Reset Request - HealthCare',
+          html: message
+        });
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError);
+        // Continue without failing the request
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset instructions sent to your email'
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    next(error);
+  }
+};
+
+// Verify reset token
+const verifyResetToken = async (req, res, next) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reset token is required'
+      });
+    }
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: {
+          [require('sequelize').Op.gt]: new Date()
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Reset token is valid'
+    });
+
+  } catch (error) {
+    console.error('Verify reset token error:', error);
+    next(error);
+  }
+};
+
+// Reset password
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token and password are required'
+      });
+    }
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: {
+          [require('sequelize').Op.gt]: new Date()
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    // Update password and clear reset token
+    await user.update({
+      password: password, // Will be hashed by the beforeUpdate hook
+      resetPasswordToken: null,
+      resetPasswordExpires: null
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully'
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
   updateProfile,
-  changePassword
+  changePassword,
+  forgotPassword,
+  verifyResetToken,
+  resetPassword
 };

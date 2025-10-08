@@ -10,9 +10,13 @@ import {
   EyeIcon,
   FunnelIcon,
   CheckCircleIcon,
-  PlayIcon
+  PlayIcon,
+  DocumentTextIcon,
+  VideoCameraIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
+import PrescriptionInterface from '../components/PrescriptionInterface';
+import PrescriptionView from '../components/PrescriptionView';
 
 interface Appointment {
   id: number;
@@ -57,6 +61,9 @@ const DoctorAppointments: React.FC = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [showVideoInPrescription, setShowVideoInPrescription] = useState(false);
+  const [selectedAppointmentForPrescription, setSelectedAppointmentForPrescription] = useState<Appointment | null>(null);
   const [rescheduleForm, setRescheduleForm] = useState({
     appointmentDate: '',
     timeBlock: '09:00-12:00'
@@ -72,11 +79,33 @@ const DoctorAppointments: React.FC = () => {
   // Fetch appointments
   const fetchAppointments = async () => {
     try {
-      const response = await axios.get('/appointments');
-      setAppointments(response.data.data.appointments || []);
+      setIsLoading(true);
+      // First get the doctor profile to get the doctor ID
+      const doctorProfileResponse = await axios.get('/doctors/profile');
+      const doctorId = doctorProfileResponse.data.data.doctor.id;
+      
+      // Then fetch appointments for this specific doctor (get all appointments, not just first page)
+      const response = await axios.get(`/doctors/${doctorId}/appointments`, {
+        params: { limit: 1000 } // Get all appointments, not just first 10
+      });
+      const appointments = response.data.data.appointments || [];
+      
+      console.log('Fetched appointments:', appointments.length);
+      console.log('Appointments with requested status:', appointments.filter((apt: any) => apt.status === 'requested'));
+      
+      setAppointments(appointments);
+      
+      // Show success message if we have appointments
+      if (appointments.length > 0) {
+        toast.success(`Loaded ${appointments.length} appointments`);
+      } else {
+        toast('No appointments found', { icon: 'ℹ️' });
+      }
     } catch (error) {
       console.error('Failed to fetch appointments:', error);
       toast.error('Failed to load appointments');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,23 +113,59 @@ const DoctorAppointments: React.FC = () => {
     fetchAppointments();
   }, []);
 
-  // Filter appointments
+  // Filter and sort appointments
   useEffect(() => {
-    if (selectedFilter === 'all') {
-      setFilteredAppointments(appointments);
-    } else {
-      setFilteredAppointments(appointments.filter(app => app.status === selectedFilter));
+    console.log('🔍 Raw appointments data:', appointments.length, 'appointments');
+    console.log('🔍 First appointment sample:', appointments[0]);
+    
+    let filtered = appointments;
+    
+    // Apply status filter
+    if (selectedFilter !== 'all') {
+      filtered = appointments.filter(app => app.status === selectedFilter);
     }
+    
+    console.log('🔍 After filtering:', filtered.length, 'appointments');
+    
+    // Backend now provides data in DESC order, but let's ensure frontend sorting too
+    filtered = [...filtered].sort((a, b) => {
+      // Compare dates first (descending order)
+      const dateCompare = b.appointmentDate.localeCompare(a.appointmentDate);
+      if (dateCompare !== 0) {
+        return dateCompare;
+      }
+      
+      // If dates are same, compare times (descending order)
+      const timeA = a.appointmentTime || '00:00';
+      const timeB = b.appointmentTime || '00:00';
+      return timeB.localeCompare(timeA);
+    });
+    
+    console.log('✅ Final sorted appointments (first 5):', filtered.slice(0, 5).map(app => ({
+      id: app.id,
+      date: app.appointmentDate,
+      time: app.appointmentTime,
+      status: app.status,
+      serial: app.serialNumber
+    })));
+    
+    setFilteredAppointments(filtered);
   }, [selectedFilter, appointments]);
 
   // Approve appointment
   const handleApprove = async (appointmentId: number) => {
     setIsLoading(true);
     try {
-      await axios.put(`/appointments/${appointmentId}/approve`);
+      console.log('Attempting to approve appointment:', appointmentId);
+      const response = await axios.put(`/appointments/${appointmentId}/approve`);
+      console.log('Approve response:', response.data);
       toast.success('Appointment approved successfully!');
       await fetchAppointments();
     } catch (error: any) {
+      console.error('Approve appointment error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error headers:', error.response?.headers);
       toast.error(error.response?.data?.message || 'Failed to approve appointment');
     } finally {
       setIsLoading(false);
@@ -136,6 +201,13 @@ const DoctorAppointments: React.FC = () => {
       await axios.put(`/appointments/${appointmentId}/start`);
       toast.success('Appointment started - now in progress');
       await fetchAppointments();
+      
+      // Open prescription interface for the started appointment
+      const appointment = appointments.find(apt => apt.id === appointmentId);
+      if (appointment) {
+        setSelectedAppointmentForPrescription(appointment);
+        setShowPrescriptionModal(true);
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to start appointment');
     } finally {
@@ -145,7 +217,16 @@ const DoctorAppointments: React.FC = () => {
 
   // Mark appointment as completed
   const handleComplete = async (appointmentId: number) => {
-    if (!window.confirm('Mark this appointment as completed?')) {
+    const confirmMessage = `Are you sure you want to complete this appointment?
+
+⚠️ IMPORTANT WARNING:
+- Once completed, the prescription cannot be edited
+- Make sure all prescription details are finalized
+- This action cannot be undone
+
+Do you want to proceed?`;
+
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 
@@ -159,6 +240,49 @@ const DoctorAppointments: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle prescription completion
+  const handlePrescriptionComplete = () => {
+    setShowPrescriptionModal(false);
+    setSelectedAppointmentForPrescription(null);
+    setShowVideoInPrescription(false);
+    fetchAppointments(); // Refresh appointments list
+  };
+
+  // Handle complete appointment from prescription interface
+  const handleCompleteFromPrescription = async (appointmentId: number) => {
+    const confirmMessage = `Are you sure you want to complete this appointment?
+
+⚠️ IMPORTANT WARNING:
+- Once completed, the prescription cannot be edited
+- Make sure all prescription details are finalized
+- This action cannot be undone
+
+Do you want to proceed?`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await axios.put(`/appointments/${appointmentId}/complete`);
+      toast.success('Appointment marked as completed');
+      setShowPrescriptionModal(false);
+      setSelectedAppointmentForPrescription(null);
+      setShowVideoInPrescription(false);
+      await fetchAppointments();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to complete appointment');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+  const handleVideoCallInPrescription = () => {
+    setShowVideoInPrescription(true);
   };
 
   // Reschedule appointment
@@ -229,9 +353,21 @@ const DoctorAppointments: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="page-header">Appointment Management</h1>
-        <p className="text-gray-600">Review and manage patient appointment requests.</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="page-header">Appointment Management</h1>
+          <p className="text-gray-600">Review and manage patient appointment requests.</p>
+        </div>
+        <button
+          onClick={() => {
+            console.log('🔄 Manual sort trigger');
+            console.log('Current appointments:', appointments);
+            console.log('Current filtered:', filteredAppointments);
+          }}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700"
+        >
+          Debug Sort
+        </button>
       </div>
 
       {/* Filters */}
@@ -282,10 +418,29 @@ const DoctorAppointments: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredAppointments.length === 0 ? (
+              {isLoading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    No appointments found for the selected filter.
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                      <span className="ml-2">Loading appointments...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredAppointments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                    {appointments.length === 0 ? (
+                      <div>
+                        <p className="text-lg font-medium mb-2">No appointments found</p>
+                        <p className="text-sm">You don't have any appointments yet.</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-lg font-medium mb-2">No appointments found for "{selectedFilter}" filter</p>
+                        <p className="text-sm">Try selecting a different filter or check "All" to see all appointments.</p>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ) : (
@@ -373,6 +528,31 @@ const DoctorAppointments: React.FC = () => {
                           title="Start Appointment (In Progress)"
                         >
                           <PlayIcon className="h-5 w-5 inline" />
+                        </button>
+                      )}
+                      {appointment.type === 'telemedicine' && (appointment.status === 'confirmed' || appointment.status === 'in_progress') && (
+                        <button
+                          onClick={() => {
+                            setSelectedAppointmentForPrescription(appointment);
+                            setShowPrescriptionModal(true);
+                            setShowVideoInPrescription(true);
+                          }}
+                          className="text-green-600 hover:text-green-900"
+                          title="Start Video Consultation"
+                        >
+                          <VideoCameraIcon className="h-5 w-5 inline" />
+                        </button>
+                      )}
+                      {appointment.status === 'in_progress' && (
+                        <button
+                          onClick={() => {
+                            setSelectedAppointmentForPrescription(appointment);
+                            setShowPrescriptionModal(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-900 disabled:opacity-50 mr-2"
+                          title="Manage Prescription"
+                        >
+                          <DocumentTextIcon className="h-5 w-5 inline" />
                         </button>
                       )}
                       {(appointment.status === 'in_progress' || appointment.status === 'confirmed') && (
@@ -501,6 +681,15 @@ const DoctorAppointments: React.FC = () => {
                     <div className="col-span-full">
                       <label className="text-sm font-medium text-gray-500">Medical History</label>
                       <p className="text-gray-900">{selectedAppointment.patient.medicalHistory || 'None reported'}</p>
+                    </div>
+                    <div className="col-span-full">
+                      <button
+                        onClick={() => window.open(`/admin-lab-reports?patientId=${selectedAppointment.patient.id}`, '_blank')}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
+                      >
+                        <DocumentTextIcon className="h-4 w-4" />
+                        View Patient Reports
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -667,6 +856,149 @@ const DoctorAppointments: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Prescription Interface Modal */}
+      {showPrescriptionModal && selectedAppointmentForPrescription && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-1 sm:p-2">
+          <div className="bg-white rounded-lg max-w-[98vw] w-full h-[98vh] flex flex-col overflow-hidden">
+            <div className="flex-shrink-0 p-4 sm:p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-2xl font-bold text-gray-900 flex-1 min-w-0 pr-4">
+                  <span className="truncate block">
+                    {selectedAppointmentForPrescription.type === 'telemedicine' 
+                      ? 'Telemedicine Consultation' 
+                      : 'Prescription Management'
+                    }
+                  </span>
+                  <span className="text-sm sm:text-base text-gray-600 truncate block">
+                    {selectedAppointmentForPrescription.patient.user.firstName} {selectedAppointmentForPrescription.patient.user.lastName}
+                  </span>
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowPrescriptionModal(false);
+                    setSelectedAppointmentForPrescription(null);
+                    setShowVideoInPrescription(false);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 flex-shrink-0 p-1"
+                >
+                  <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              {/* Main Content Grid */}
+              {selectedAppointmentForPrescription.type === 'telemedicine' ? (
+                /* Telemedicine: Responsive layout - stacked on mobile, side-by-side on large screens */
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4 h-full">
+                  {/* Left Column - Video Consultation (2/5 width on large screens) */}
+                  <div className="lg:col-span-2 flex flex-col">
+                    <div className="bg-gray-50 rounded-lg p-3 flex-1 flex flex-col">
+                      <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <VideoCameraIcon className="h-4 w-4 text-blue-600" />
+                        Video Call
+                      </h3>
+                      {!showVideoInPrescription ? (
+                        <div className="space-y-3">
+                          <p className="text-xs text-gray-600">
+                            Start video consultation with the patient.
+                          </p>
+                          <button
+                            onClick={handleVideoCallInPrescription}
+                            className="w-full bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                          >
+                            <VideoCameraIcon className="h-4 w-4" />
+                            Start Video
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col flex-1 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              <span className="text-xs text-green-600 font-medium">Live</span>
+                            </div>
+                            <button
+                              onClick={() => setShowVideoInPrescription(false)}
+                              className="text-red-600 hover:text-red-700 text-xs font-medium px-2 py-1 rounded"
+                            >
+                              End
+                            </button>
+                          </div>
+                          {/* Embedded Video Consultation - Taller for full interface */}
+                          <div className="bg-gray-900 rounded-lg overflow-hidden flex-1 min-h-0" style={{ minHeight: '500px', maxHeight: '600px' }}>
+                            <iframe
+                              src={`https://meet.jit.si/HealthcareApp${selectedAppointmentForPrescription.id}?skipPrejoin=true&displayName=${encodeURIComponent(`Dr. ${user?.firstName} ${user?.lastName}`)}`}
+                              className="w-full h-full border-0"
+                              allow="camera; microphone; fullscreen; display-capture; autoplay"
+                              title="Video Consultation"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Column - Prescription Interface (3/5 width on large screens) */}
+                  <div className="lg:col-span-3 flex flex-col">
+                    <div className="bg-gray-50 rounded-lg p-4 flex-1 flex flex-col">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <DocumentTextIcon className="h-5 w-5 text-green-600" />
+                        Prescription Management
+                      </h3>
+                      <div className="flex-1 min-h-0 overflow-y-auto">
+                        <PrescriptionInterface
+                          appointmentId={selectedAppointmentForPrescription.id}
+                          onComplete={handlePrescriptionComplete}
+                          isReadOnly={false}
+                          userRole="doctor"
+                          patientId={selectedAppointmentForPrescription.patient.id}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Regular appointments: Full-width prescription */
+                <div className="h-full">
+                  <div className="bg-gray-50 rounded-lg p-4 h-full flex flex-col">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <DocumentTextIcon className="h-5 w-5 text-green-600" />
+                      Prescription Management
+                    </h3>
+                    <div className="flex-1 min-h-0 overflow-y-auto">
+                      <PrescriptionInterface
+                        appointmentId={selectedAppointmentForPrescription.id}
+                        onComplete={handlePrescriptionComplete}
+                        isReadOnly={false}
+                        userRole="doctor"
+                        patientId={selectedAppointmentForPrescription.patient.id}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+              
+            {/* Fixed Footer with Complete Button */}
+            <div className="flex-shrink-0 border-t border-gray-200 p-4 sm:p-6 bg-gray-50">
+              <div className="flex justify-end">
+                <button
+                  onClick={() => handleCompleteFromPrescription(selectedAppointmentForPrescription.id)}
+                  disabled={isLoading}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  <CheckCircleIcon className="h-4 w-4" />
+                  {isLoading ? 'Completing...' : 'Complete Appointment'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

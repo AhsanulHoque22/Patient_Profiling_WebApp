@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { formatCurrency } from '../services/paymentService';
+import { MEDICAL_DEPARTMENTS, getDepartmentLabel } from '../utils/departments';
 import { 
   UserIcon, 
   AcademicCapIcon, 
@@ -19,7 +19,7 @@ import {
 interface DoctorProfileData {
   profileImage?: string;
   bmdcRegistrationNumber?: string;
-  specialization?: string | null | undefined;
+  department?: string | null | undefined;
   experience?: number | null | undefined;
   education?: string | null | undefined;
   certifications?: string | null | undefined;
@@ -36,20 +36,6 @@ interface DoctorProfileData {
   bio?: string | null | undefined;
 }
 
-const schema = yup.object().shape({
-  specialization: yup.string().nullable().optional(),
-  experience: yup.number().nullable().optional(),
-  education: yup.string().nullable().optional(),
-  certifications: yup.string().nullable().optional(),
-  hospital: yup.string().nullable().optional(),
-  location: yup.string().nullable().optional(),
-  consultationFee: yup.string().nullable().optional().test('is-valid-fee', 'Fee must be a valid positive number', function(value) {
-    if (!value || value === '') return true; // Allow empty values
-    const num = parseFloat(value);
-    return !isNaN(num) && num >= 0;
-  }),
-  bio: yup.string().max(1000, 'Bio must be less than 1000 characters').nullable().optional(),
-}) as yup.ObjectSchema<Partial<DoctorProfileData>>;
 
 const DoctorProfile: React.FC = () => {
   const { user } = useAuth();
@@ -58,7 +44,7 @@ const DoctorProfile: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileData, setProfileData] = useState<DoctorProfileData>({
-    specialization: '',
+    department: '',
     experience: 0,
     education: '',
     certifications: '',
@@ -79,7 +65,6 @@ const DoctorProfile: React.FC = () => {
   const [newService, setNewService] = useState('');
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
-    resolver: yupResolver(schema),
     defaultValues: profileData
   });
 
@@ -111,7 +96,7 @@ const DoctorProfile: React.FC = () => {
       setProfileData({
         profileImage: data.profileImage || '',
         bmdcRegistrationNumber: data.bmdcRegistrationNumber || '',
-        specialization: data.specialization || '',
+        department: data.department || '',
         experience: data.experience || 0,
         education: data.education || '',
         certifications: data.certifications || '',
@@ -127,7 +112,7 @@ const DoctorProfile: React.FC = () => {
       });
       
       // Set form values
-      setValue('specialization', data.specialization || '');
+      setValue('department', data.department || '');
       setValue('experience', data.experience || 0);
       setValue('education', data.education || '');
       setValue('certifications', data.certifications || '');
@@ -403,20 +388,26 @@ const DoctorProfile: React.FC = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Medical Department</label>
                   {isEditing ? (
-                    <input
-                      {...register('specialization')}
+                    <select
+                      {...register('department')}
                       className={`w-full px-3 py-2 border ${
-                        errors.specialization ? 'border-red-300' : 'border-gray-300'
+                        errors.department ? 'border-red-300' : 'border-gray-300'
                       } rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
-                      placeholder="Enter specialization"
-                    />
+                    >
+                      <option value="">Select Department</option>
+                      {MEDICAL_DEPARTMENTS.map((dept) => (
+                        <option key={dept.value} value={dept.value}>
+                          {dept.label}
+                        </option>
+                      ))}
+                    </select>
                   ) : (
-                    <p className="text-gray-900">{profileData.specialization || 'Not provided'}</p>
+                    <p className="text-gray-900">{getDepartmentLabel(profileData.department || '') || 'Not provided'}</p>
                   )}
-                  {errors.specialization && (
-                    <p className="mt-1 text-sm text-red-600">{errors.specialization.message as string}</p>
+                  {errors.department && (
+                    <p className="mt-1 text-sm text-red-600">{errors.department.message as string}</p>
                   )}
                 </div>
 
@@ -511,7 +502,7 @@ const DoctorProfile: React.FC = () => {
                       placeholder="Enter consultation fee"
                     />
                   ) : (
-                    <p className="text-gray-900">৳{profileData.consultationFee || 'Not set'}</p>
+                    <p className="text-gray-900">{profileData.consultationFee ? formatCurrency(parseFloat(profileData.consultationFee)) : 'Not set'}</p>
                   )}
                   {errors.consultationFee && (
                     <p className="mt-1 text-sm text-red-600">{errors.consultationFee.message as string}</p>

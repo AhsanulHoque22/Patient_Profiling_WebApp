@@ -1,5 +1,6 @@
-const { User, Patient, Doctor, Appointment, MedicalRecord } = require('../models');
+const { User, Patient, Doctor, Appointment, MedicalRecord, DoctorRating } = require('../models');
 const { Op } = require('sequelize');
+const { sequelize } = require('../config/database');
 const { body, validationResult } = require('express-validator');
 
 // Get all users with pagination and filters
@@ -225,7 +226,7 @@ const getAppointmentAnalytics = async (req, res, next) => {
       attributes: [
         'status',
         'type',
-        [sequelize.fn('DATE', sequelize.col('appointmentDate')), 'date']
+        'appointmentDate'
       ],
       raw: true
     });
@@ -243,7 +244,7 @@ const getAppointmentAnalytics = async (req, res, next) => {
       typeCounts[appointment.type] = (typeCounts[appointment.type] || 0) + 1;
       
       // Daily counts
-      const date = appointment.date.toISOString().split('T')[0];
+      const date = new Date(appointment.appointmentDate).toISOString().split('T')[0];
       dailyCounts[date] = (dailyCounts[date] || 0) + 1;
     });
 
@@ -334,6 +335,191 @@ const verifyDoctor = async (req, res, next) => {
   }
 };
 
+// Get all patients with pagination and filters
+const getPatients = async (req, res, next) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      search,
+      isActive,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC'
+    } = req.query;
+
+    const whereClause = { role: 'patient' };
+    
+    if (isActive !== undefined) whereClause.isActive = isActive === 'true';
+    
+    if (search) {
+      whereClause[Op.or] = [
+        { firstName: { [Op.like]: `%${search}%` } },
+        { lastName: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    const patients = await User.findAndCountAll({
+      where: whereClause,
+      attributes: { exclude: ['password'] },
+      include: [
+        {
+          association: 'patientProfile',
+          required: true
+        }
+      ],
+      order: [[sortBy, sortOrder.toUpperCase()]],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit)
+    });
+
+    // Transform the data to match expected format
+    const transformedPatients = patients.rows.map(user => ({
+      id: user.patientProfile.id,
+      ...user.patientProfile.dataValues,
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        dateOfBirth: user.dateOfBirth,
+        gender: user.gender,
+        address: user.address,
+        isActive: user.isActive,
+        emailVerified: user.emailVerified,
+        lastLogin: user.lastLogin
+      }
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        patients: transformedPatients,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(patients.count / parseInt(limit)),
+          totalRecords: patients.count,
+          hasNext: parseInt(page) * parseInt(limit) < patients.count,
+          hasPrev: parseInt(page) > 1
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get patient by ID
+const getPatientById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const patient = await Patient.findByPk(id, {
+      include: [
+        {
+          association: 'user',
+          attributes: { exclude: ['password'] }
+        }
+      ]
+    });
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { patient }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get all doctors (for admin use - includes unverified doctors)
+const getAllDoctors = async (req, res, next) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      search,
+      isVerified,
+      department,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC'
+    } = req.query;
+
+    const whereClause = { role: 'doctor' };
+    const doctorWhereClause = {};
+    
+    if (isVerified !== undefined) doctorWhereClause.isVerified = isVerified === 'true';
+    if (department) doctorWhereClause.department = department;
+    
+    if (search) {
+      whereClause[Op.or] = [
+        { firstName: { [Op.like]: `%${search}%` } },
+        { lastName: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    const doctors = await Doctor.findAndCountAll({
+      where: doctorWhereClause,
+      include: [
+        {
+          association: 'user',
+          attributes: { exclude: ['password'] },
+          where: whereClause
+        }
+      ],
+      order: [[sortBy, sortOrder.toUpperCase()]],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit),
+      distinct: true
+    });
+
+    // Calculate average ratings for each doctor
+    const doctorsWithRatings = await Promise.all(
+      doctors.rows.map(async (doctor) => {
+        const ratingStats = await DoctorRating.findOne({
+          where: { doctorId: doctor.id },
+          attributes: [
+            [sequelize.fn('AVG', sequelize.col('rating')), 'averageRating'],
+            [sequelize.fn('COUNT', sequelize.col('id')), 'totalRatings']
+          ],
+          raw: true
+        });
+
+        return {
+          ...doctor.toJSON(),
+          calculatedRating: ratingStats?.averageRating ? parseFloat(ratingStats.averageRating) : 0,
+          totalRatings: ratingStats?.totalRatings ? parseInt(ratingStats.totalRatings) : 0
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: {
+        doctors: doctorsWithRatings,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(doctors.count / parseInt(limit)),
+          totalRecords: doctors.count,
+          hasNext: parseInt(page) * parseInt(limit) < doctors.count,
+          hasPrev: parseInt(page) > 1
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getUsers,
   getUserById,
@@ -341,6 +527,9 @@ module.exports = {
   deleteUser,
   getSystemStats,
   getAppointmentAnalytics,
+  getAllDoctors,
   getDoctorVerificationRequests,
-  verifyDoctor
+  verifyDoctor,
+  getPatients,
+  getPatientById
 };

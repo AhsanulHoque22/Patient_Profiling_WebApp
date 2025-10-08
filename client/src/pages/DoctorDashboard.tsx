@@ -9,7 +9,8 @@ import {
   ClockIcon,
   ExclamationCircleIcon,
   ChartBarIcon,
-  UserIcon
+  UserIcon,
+  StarIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 
@@ -61,21 +62,34 @@ const DoctorDashboard: React.FC = () => {
     enabled: !!doctorProfile?.id,
   });
 
-  // Fetch all appointments to get today's schedule
+  // Fetch today's appointments for this doctor
   const { data: appointments } = useQuery<TodayAppointment[]>({
-    queryKey: ['doctor-appointments-today'],
+    queryKey: ['doctor-appointments-today', doctorProfile?.id],
     queryFn: async () => {
-      const response = await axios.get('/appointments');
+      if (!doctorProfile?.id) return [];
+      
+      // Fetch appointments for today for this specific doctor
+      const today = new Date().toISOString().split('T')[0];
+      const response = await axios.get(`/doctors/${doctorProfile.id}/appointments`, {
+        params: { date: today }
+      });
+      
       const allAppointments = response.data.data.appointments || [];
       
-      // Filter for today's appointments
-      const today = new Date().toISOString().split('T')[0];
-      return allAppointments.filter((apt: any) => {
-        const aptDate = new Date(apt.appointmentDate).toISOString().split('T')[0];
-        return aptDate === today;
-      }).sort((a: any, b: any) => a.appointmentTime.localeCompare(b.appointmentTime));
+      // Sort by appointment time
+      return allAppointments.sort((a: any, b: any) => a.appointmentTime.localeCompare(b.appointmentTime));
     },
-    enabled: user?.role === 'doctor',
+    enabled: user?.role === 'doctor' && !!doctorProfile?.id,
+  });
+
+  // Fetch doctor's ratings
+  const { data: ratingData } = useQuery({
+    queryKey: ['doctor-ratings', doctorProfile?.id],
+    queryFn: async () => {
+      const response = await axios.get(`/ratings/doctor/${doctorProfile?.id}`);
+      return response.data.data;
+    },
+    enabled: !!doctorProfile?.id,
   });
 
   const getStatusColor = (status: string) => {
@@ -144,6 +158,20 @@ const DoctorDashboard: React.FC = () => {
       <div>
         <h1 className="page-header">Doctor's Dashboard</h1>
         <p className="text-gray-600">Welcome back, Dr. {user?.firstName} {user?.lastName}</p>
+        {ratingData?.summary && ratingData.summary.totalRatings > 0 && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-sm text-gray-500">Your Overall Rating:</span>
+            <div className="flex items-center gap-1">
+              <StarIcon className="h-4 w-4 text-yellow-400" />
+              <span className="text-sm font-medium text-gray-900">
+                {parseFloat(ratingData.summary.averageRating).toFixed(1)}
+              </span>
+              <span className="text-sm text-gray-500">
+                ({ratingData.summary.totalRatings} reviews)
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stats Grid */}

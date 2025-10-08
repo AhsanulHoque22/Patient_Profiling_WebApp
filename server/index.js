@@ -13,6 +13,11 @@ const patientRoutes = require('./routes/patients');
 const doctorRoutes = require('./routes/doctors');
 const appointmentRoutes = require('./routes/appointments');
 const adminRoutes = require('./routes/admin');
+const prescriptionRoutes = require('./routes/prescriptions');
+const ratingRoutes = require('./routes/ratings');
+const labTestRoutes = require('./routes/labTests');
+const bkashRoutes = require('./routes/bkash');
+const medicineRoutes = require('./routes/medicine');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -59,6 +64,11 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/ratings', ratingRoutes);
+app.use('/api/lab-tests', labTestRoutes);
+app.use('/api/bkash', bkashRoutes);
+app.use('/api/medicines', medicineRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -83,13 +93,25 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
     
-    // Sync database models (disabled to prevent index issues)
-    // await sequelize.sync({ alter: true });
-    console.log('Database models synchronized (sync disabled).');
+    // Sync database models
+    await sequelize.sync({ force: false, alter: false });
+    console.log('Database models synchronized.');
     
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+
+    // Handle server errors gracefully
+    server.on('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use. Please stop the existing process or use a different port.`);
+        console.error('To fix this, run: lsof -ti:5000 | xargs kill -9');
+        process.exit(1);
+      } else {
+        console.error('Server error:', error);
+        process.exit(1);
+      }
     });
   } catch (error) {
     console.error('Unable to start server:', error);

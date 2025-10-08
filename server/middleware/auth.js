@@ -12,11 +12,29 @@ const authenticateToken = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     const user = await User.findByPk(decoded.userId, {
-      attributes: { exclude: ['password'] }
+      attributes: { exclude: ['password'] },
+      include: [
+        {
+          association: 'patientProfile',
+          required: false
+        },
+        {
+          association: 'doctorProfile',
+          required: false
+        }
+      ]
     });
 
     if (!user || !user.isActive) {
       return res.status(401).json({ message: 'Invalid or inactive user' });
+    }
+
+    // Add patientId and doctorId for easy access
+    if (user.patientProfile) {
+      user.patientId = user.patientProfile.id;
+    }
+    if (user.doctorProfile) {
+      user.doctorId = user.doctorProfile.id;
     }
 
     req.user = user;

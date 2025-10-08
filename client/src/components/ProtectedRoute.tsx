@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
 interface ProtectedRouteProps {
@@ -14,6 +15,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, loading } = useAuth();
   const location = useLocation();
 
+
+  // Check if user has unauthorized access
+  const hasUnauthorizedAccess = requiredRole && user && user.role !== requiredRole;
+
+  // Show toast for unauthorized access
+  useEffect(() => {
+    if (hasUnauthorizedAccess) {
+      toast.error(`Access denied. This page is only available for ${requiredRole}s.`);
+    }
+  }, [hasUnauthorizedAccess, requiredRole]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -26,8 +38,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requiredRole && user.role !== requiredRole) {
-    return <Navigate to="/dashboard" replace />;
+  if (hasUnauthorizedAccess) {
+    // Redirect to appropriate dashboard based on user role
+    const redirectPath = user.role === 'doctor' ? '/doctor-dashboard' : 
+                        user.role === 'admin' ? '/admin-dashboard' : 
+                        '/dashboard';
+    return <Navigate to={redirectPath} replace />;
   }
 
   return <>{children}</>;

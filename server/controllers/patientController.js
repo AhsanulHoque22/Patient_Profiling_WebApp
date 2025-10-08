@@ -45,7 +45,7 @@ const updatePatientProfile = async (req, res, next) => {
     }
 
     const patientId = req.params.id;
-    const { bloodType, allergies, emergencyContact, emergencyPhone, insuranceProvider, insuranceNumber, medicalHistory, currentMedications } = req.body;
+    const { bloodType, allergies, emergencyContact, emergencyPhone, insuranceProvider, insuranceNumber } = req.body;
 
     const patient = await Patient.findByPk(patientId);
     if (!patient) {
@@ -56,14 +56,12 @@ const updatePatientProfile = async (req, res, next) => {
     }
 
     await patient.update({
-      bloodType,
-      allergies,
-      emergencyContact,
-      emergencyPhone,
-      insuranceProvider,
-      insuranceNumber,
-      medicalHistory,
-      currentMedications
+      bloodType: bloodType || null, // Convert empty string to null for ENUM
+      allergies: allergies || null,
+      emergencyContact: emergencyContact || null,
+      emergencyPhone: emergencyPhone || null,
+      insuranceProvider: insuranceProvider || null,
+      insuranceNumber: insuranceNumber || null
     });
 
     const updatedPatient = await Patient.findByPk(patientId, {
@@ -284,14 +282,14 @@ const updateCurrentPatientProfile = async (req, res, next) => {
     }
 
     await patient.update({
-      bloodType,
-      allergies,
-      emergencyContact,
-      emergencyPhone,
-      insuranceProvider,
-      insuranceNumber,
-      medicalHistory,
-      currentMedications
+      bloodType: bloodType || null, // Convert empty string to null for ENUM
+      allergies: allergies || null,
+      emergencyContact: emergencyContact || null,
+      emergencyPhone: emergencyPhone || null,
+      insuranceProvider: insuranceProvider || null,
+      insuranceNumber: insuranceNumber || null,
+      medicalHistory: medicalHistory || null,
+      currentMedications: currentMedications || null
     });
 
     const updatedPatient = await Patient.findByPk(patient.id, {

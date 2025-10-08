@@ -1,29 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { ChevronDownIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
-// Form validation schemas
-const profileSchema = yup.object({
-  firstName: yup.string().required('First name is required'),
-  lastName: yup.string().required('Last name is required'),
-  phone: yup.string().optional(),
-  dateOfBirth: yup.string().optional(),
-  gender: yup.string().oneOf(['male', 'female', 'other']).optional(),
-  address: yup.string().optional(),
-});
-
-const medicalSchema = yup.object({
-  bloodType: yup.string().optional(),
-  allergies: yup.array().optional(),
-  customAllergies: yup.string().optional(),
-  emergencyContact: yup.string().optional(),
-  emergencyPhone: yup.string().optional(),
-});
 
 // Comprehensive list of common allergies
 const COMMON_ALLERGIES = [
@@ -51,22 +32,6 @@ const COMMON_ALLERGIES = [
   'Exercise-induced', 'Food additives', 'Artificial colors', 'Preservatives'
 ];
 
-interface ProfileFormData {
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  dateOfBirth?: string;
-  gender?: 'male' | 'female' | 'other';
-  address?: string;
-}
-
-interface MedicalFormData {
-  bloodType?: string;
-  allergies?: string[];
-  customAllergies?: string;
-  emergencyContact?: string;
-  emergencyPhone?: string;
-}
 
 const PatientProfile: React.FC = () => {
   const { user } = useAuth();
@@ -88,9 +53,7 @@ const PatientProfile: React.FC = () => {
     emergencyContact: '',
     emergencyPhone: '',
     insuranceProvider: '',
-    insuranceNumber: '',
-    medicalHistory: '',
-    currentMedications: ''
+    insuranceNumber: ''
   });
 
   // Close dropdown when clicking outside
@@ -118,9 +81,7 @@ const PatientProfile: React.FC = () => {
         emergencyContact: data.emergencyContact || '',
         emergencyPhone: data.emergencyPhone || '',
         insuranceProvider: data.insuranceProvider || '',
-        insuranceNumber: data.insuranceNumber || '',
-        medicalHistory: data.medicalHistory || '',
-        currentMedications: data.currentMedications || ''
+        insuranceNumber: data.insuranceNumber || ''
       });
       
       // Parse allergies string into array for selected allergies display
@@ -137,7 +98,6 @@ const PatientProfile: React.FC = () => {
   }, []);
 
   const profileForm = useForm({
-    resolver: yupResolver(profileSchema),
     defaultValues: {
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',
@@ -148,14 +108,23 @@ const PatientProfile: React.FC = () => {
     },
   });
 
-  const medicalForm = useForm({
-    resolver: yupResolver(medicalSchema),
+  const medicalForm = useForm<{
+    bloodType: string;
+    allergies: string[];
+    customAllergies: string;
+    emergencyContact: string;
+    emergencyPhone: string;
+    insuranceProvider: string;
+    insuranceNumber: string;
+  }>({
     defaultValues: {
       bloodType: '',
-      allergies: [],
+      allergies: [] as string[],
       customAllergies: '',
       emergencyContact: '',
       emergencyPhone: '',
+      insuranceProvider: '',
+      insuranceNumber: ''
     },
   });
 
@@ -210,7 +179,7 @@ const PatientProfile: React.FC = () => {
       // Prepare data for backend - convert allergies array to string
       const medicalData = {
         ...data,
-        allergies: selectedAllergies.length > 0 ? selectedAllergies.join(', ') : null
+        allergies: selectedAllergies.length > 0 ? selectedAllergies.join(', ') : ''
       };
       
       await axios.put('/patients/profile', medicalData);
@@ -497,6 +466,22 @@ const PatientProfile: React.FC = () => {
                       placeholder="Emergency contact phone number"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Insurance Provider</label>
+                    <input
+                      {...medicalForm.register('insuranceProvider')}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      placeholder="Insurance company name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Insurance Number</label>
+                    <input
+                      {...medicalForm.register('insuranceNumber')}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      placeholder="Insurance policy number"
+                    />
+                  </div>
                 </div>
                 <div className="mt-6 flex gap-3">
                   <button 
@@ -545,7 +530,14 @@ const PatientProfile: React.FC = () => {
                       <p><strong>Name:</strong> {patientData.emergencyContact || 'Not provided'}</p>
                       <p><strong>Phone:</strong> {patientData.emergencyPhone || 'Not provided'}</p>
                     </div>
-                 </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Insurance Information</label>
+                    <div className="mt-1 text-sm text-gray-900">
+                      <p><strong>Provider:</strong> {patientData.insuranceProvider || 'Not provided'}</p>
+                      <p><strong>Policy Number:</strong> {patientData.insuranceNumber || 'Not provided'}</p>
+                    </div>
+                  </div>
                 </div>
                 <div className="mt-6">
                   <button 

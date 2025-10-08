@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import { useAuth } from '../context/AuthContext';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { MEDICAL_DEPARTMENTS } from '../utils/departments';
 
 interface RegisterFormData {
   email: string;
@@ -19,38 +18,10 @@ interface RegisterFormData {
   role: 'patient' | 'doctor' | 'admin';
   // Doctor-specific fields
   bmdcRegistrationNumber?: string;
-  specialization?: string;
+  department?: string;
   experience?: number;
 }
 
-const schema = yup.object({
-  email: yup.string().email('Invalid email').required('Email is required'),
-  password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-  confirmPassword: yup.string().oneOf([yup.ref('password')], 'Passwords must match').required('Confirm password is required'),
-  firstName: yup.string().required('First name is required'),
-  lastName: yup.string().required('Last name is required'),
-  phone: yup.string().optional(),
-  dateOfBirth: yup.string().optional(),
-  gender: yup.string().oneOf(['male', 'female', 'other']).optional(),
-  address: yup.string().optional(),
-  role: yup.string().oneOf(['patient', 'doctor', 'admin']).required('Role is required'),
-  // Doctor-specific fields validation
-  bmdcRegistrationNumber: yup.string().when('role', {
-    is: 'doctor',
-    then: (schema) => schema.optional(),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-  specialization: yup.string().when('role', {
-    is: 'doctor',
-    then: (schema) => schema.optional(),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-  experience: yup.number().when('role', {
-    is: 'doctor',
-    then: (schema) => schema.min(0, 'Experience must be non-negative').optional(),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-});
 
 const Register: React.FC = () => {
   const { register: registerUser } = useAuth();
@@ -64,10 +35,21 @@ const Register: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
-    resolver: yupResolver(schema),
+  } = useForm<RegisterFormData>({
     defaultValues: {
       role: 'patient',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      firstName: '',
+      lastName: '',
+      phone: '',
+      dateOfBirth: '',
+      gender: undefined,
+      address: '',
+      bmdcRegistrationNumber: '',
+      department: '',
+      experience: 0,
     },
   });
 
@@ -326,31 +308,24 @@ const Register: React.FC = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="specialization" className="block text-sm font-medium text-gray-700">
-                    Specialization
+                  <label htmlFor="department" className="block text-sm font-medium text-gray-700">
+                    Medical Department
                   </label>
                   <select
-                    {...register('specialization')}
+                    {...register('department', { required: 'Please select a medical department' })}
                     className={`mt-1 block w-full px-3 py-2 border ${
-                      errors.specialization ? 'border-red-300' : 'border-gray-300'
+                      errors.department ? 'border-red-300' : 'border-gray-300'
                     } rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm`}
                   >
-                    <option value="">Select Specialization</option>
-                    <option value="cardiology">Cardiology</option>
-                    <option value="dermatology">Dermatology</option>
-                    <option value="pediatrics">Pediatrics</option>
-                    <option value="neurology">Neurology</option>
-                    <option value="orthopedics">Orthopedics</option>
-                    <option value="internal_medicine">Internal Medicine</option>
-                    <option value="emergency_medicine">Emergency Medicine</option>
-                    <option value="surgery">Surgery</option>
-                    <option value="psychiatry">Psychiatry</option>
-                    <option value="radiology">Radiology</option>
-                    <option value="general_practice">General Practice</option>
-                    <option value="other">Other</option>
+                    <option value="">Select Medical Department</option>
+                    {MEDICAL_DEPARTMENTS.map((dept) => (
+                      <option key={dept.value} value={dept.value}>
+                        {dept.label}
+                      </option>
+                    ))}
                   </select>
-                  {errors.specialization && (
-                    <p className="mt-1 text-sm text-red-600">{errors.specialization.message}</p>
+                  {errors.department && (
+                    <p className="mt-1 text-sm text-red-600">{errors.department.message}</p>
                   )}
                 </div>
 

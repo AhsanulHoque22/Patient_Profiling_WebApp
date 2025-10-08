@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { formatCurrency } from '../services/paymentService';
 import { 
   UserGroupIcon, 
   StarIcon, 
@@ -12,13 +13,16 @@ import {
   LanguageIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
+import { MEDICAL_DEPARTMENTS, getDepartmentLabel } from '../utils/departments';
 
 interface Doctor {
   id: number;
   bmdcRegistrationNumber: string;
-  specialization: string;
+  department: string;
   experience: number;
   rating: number;
+  calculatedRating?: number;
+  totalRatings?: number;
   bio: string;
   profileImage?: string;
   degrees: string[];
@@ -42,11 +46,16 @@ interface Doctor {
 const Doctors: React.FC = () => {
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [departmentFilter, setDepartmentFilter] = useState('');
 
   const { data: doctors, isLoading, error } = useQuery<Doctor[]>({
-    queryKey: ['doctors'],
+    queryKey: ['doctors', departmentFilter],
     queryFn: async () => {
-      const response = await axios.get('/doctors');
+      const params = new URLSearchParams();
+      if (departmentFilter) {
+        params.append('department', departmentFilter);
+      }
+      const response = await axios.get(`/doctors?${params}`);
       return response.data.data.doctors;
     },
   });
@@ -63,6 +72,28 @@ const Doctors: React.FC = () => {
         <p className="text-gray-600">
           Browse our network of qualified healthcare professionals.
         </p>
+      </div>
+
+      {/* Department Filter */}
+      <div className="card">
+        <div className="p-4">
+          <label htmlFor="department-filter" className="block text-sm font-medium text-gray-700 mb-2">
+            Filter by Medical Department
+          </label>
+          <select
+            id="department-filter"
+            value={departmentFilter}
+            onChange={(e) => setDepartmentFilter(e.target.value)}
+            className="input-field w-full sm:w-auto min-w-[250px]"
+          >
+            <option value="">All Departments</option>
+            {MEDICAL_DEPARTMENTS.map((dept) => (
+              <option key={dept.value} value={dept.value}>
+                {dept.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {isLoading ? (
@@ -108,13 +139,18 @@ const Doctors: React.FC = () => {
                     <h3 className="text-lg font-medium text-gray-900">
                       Dr. {doctor.user.firstName} {doctor.user.lastName}
                     </h3>
-                    <p className="text-sm text-gray-500 capitalize">
-                      {doctor.specialization?.replace('_', ' ') || 'General Practice'}
+                    <p className="text-sm text-gray-500">
+                      {getDepartmentLabel(doctor.department) || 'General Medicine'}
                     </p>
-                    {doctor.rating > 0 && (
+                    {(doctor.calculatedRating || 0) > 0 && (
                       <div className="flex items-center mt-1">
                         <StarIcon className="h-4 w-4 text-yellow-400 mr-1" />
-                        <span className="text-sm text-gray-600">{doctor.rating.toFixed(1)}</span>
+                        <span className="text-sm text-gray-600">
+                          {doctor.calculatedRating?.toFixed(1)} 
+                          {doctor.totalRatings && doctor.totalRatings > 0 && (
+                            <span className="text-gray-500 ml-1">({doctor.totalRatings} reviews)</span>
+                          )}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -135,7 +171,7 @@ const Doctors: React.FC = () => {
                   {doctor.consultationFee && (
                     <div className="flex items-center text-sm text-gray-600">
                       <CurrencyDollarIcon className="h-4 w-4 mr-2" />
-                      <span>৳{doctor.consultationFee}</span>
+                      <span>{formatCurrency(doctor.consultationFee)}</span>
                     </div>
                   )}
                 </div>
@@ -201,13 +237,18 @@ const Doctors: React.FC = () => {
                   <h3 className="text-xl font-semibold text-gray-900">
                     Dr. {selectedDoctor.user.firstName} {selectedDoctor.user.lastName}
                   </h3>
-                  <p className="text-primary-600 capitalize">
-                    {selectedDoctor.specialization?.replace('_', ' ') || 'General Practice'}
-                  </p>
-                  {selectedDoctor.rating > 0 && (
+                    <p className="text-primary-600">
+                      {getDepartmentLabel(selectedDoctor.department) || 'General Medicine'}
+                    </p>
+                  {(selectedDoctor.calculatedRating || 0) > 0 && (
                     <div className="flex items-center justify-center mt-2">
                       <StarIcon className="h-5 w-5 text-yellow-400 mr-1" />
-                      <span className="text-gray-600">{selectedDoctor.rating.toFixed(1)}</span>
+                      <span className="text-gray-600">
+                        {selectedDoctor.calculatedRating?.toFixed(1)}
+                        {selectedDoctor.totalRatings && selectedDoctor.totalRatings > 0 && (
+                          <span className="text-gray-500 ml-1">({selectedDoctor.totalRatings} reviews)</span>
+                        )}
+                      </span>
                     </div>
                   )}
                   {/* BMDC Registration Number */}
@@ -338,7 +379,7 @@ const Doctors: React.FC = () => {
                       <CurrencyDollarIcon className="h-5 w-5 mr-2" />
                       Consultation Fee
                     </h4>
-                    <p className="text-2xl font-bold text-green-600">৳{selectedDoctor.consultationFee}</p>
+                    <p className="text-2xl font-bold text-green-600">{formatCurrency(selectedDoctor.consultationFee)}</p>
                   </div>
                 )}
               </div>

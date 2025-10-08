@@ -52,6 +52,11 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api
 // Configure axios defaults
 axios.defaults.baseURL = API_BASE_URL;
 
+// Add cache-busting headers to prevent browser caching
+axios.defaults.headers.common['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+axios.defaults.headers.common['Pragma'] = 'no-cache';
+axios.defaults.headers.common['Expires'] = '0';
+
 // Auth provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -74,10 +79,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
           const response = await axios.get('/auth/profile');
           setUser(response.data.data.user);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to load user:', error);
-          localStorage.removeItem('token');
-          setToken(null);
+          // Check if it's a token expiration error
+          if (error.response?.status === 401) {
+            console.log('Token expired, clearing authentication');
+            localStorage.removeItem('token');
+            setToken(null);
+            setUser(null);
+            toast.error('Session expired. Please log in again.');
+          }
         }
       }
       setLoading(false);
@@ -86,10 +97,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadUser();
   }, [token]);
 
+  // Add axios interceptor for automatic token refresh
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      async (error: any) => {
+        if (error.response?.status === 401 && token) {
+          console.log('Unauthorized request, clearing token');
+          localStorage.removeItem('token');
+          setToken(null);
+          setUser(null);
+          toast.error('Session expired. Please log in again.');
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [token]);
+
   // Login function
   const login = async (email: string, password: string) => {
     try {
+      console.log('AuthContext: Attempting login with:', { email, password: '***' });
+      console.log('AuthContext: API base URL:', axios.defaults.baseURL);
+      
       const response = await axios.post('/auth/login', { email, password });
+      console.log('AuthContext: Login response:', response.data);
+      
       const { user: userData, token: newToken } = response.data.data;
       
       setUser(userData);
@@ -98,6 +135,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       toast.success('Login successful!');
     } catch (error: any) {
+      console.error('AuthContext: Login error:', error);
+      console.error('AuthContext: Error response:', error.response?.data);
       const message = error.response?.data?.message || 'Login failed';
       toast.error(message);
       throw new Error(message);

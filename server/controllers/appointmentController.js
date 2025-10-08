@@ -1,4 +1,4 @@
-const { Appointment, Patient, Doctor, User } = require('../models');
+const { Appointment, Patient, Doctor, User, Prescription, MedicalRecord } = require('../models');
 const { Op } = require('sequelize');
 const { body, validationResult } = require('express-validator');
 
@@ -16,12 +16,19 @@ const createAppointment = async (req, res, next) => {
 
     const { patientId, doctorId, appointmentDate, timeBlock, duration, type, reason, symptoms } = req.body;
 
-    // Check if doctor exists
+    // Check if doctor exists and is verified
     const doctor = await Doctor.findByPk(doctorId);
     if (!doctor) {
       return res.status(404).json({
         success: false,
         message: 'Doctor not found'
+      });
+    }
+
+    if (!doctor.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot book appointment with unverified doctor'
       });
     }
 
@@ -195,7 +202,7 @@ const getAppointments = async (req, res, next) => {
           include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email'] }]
         }
       ],
-      order: [['appointmentDate', 'ASC'], ['appointmentTime', 'ASC']],
+      order: [['appointmentDate', 'DESC'], ['appointmentTime', 'DESC']],
       limit: parseInt(limit),
       offset: (parseInt(page) - 1) * parseInt(limit)
     });
@@ -582,6 +589,9 @@ const startAppointment = async (req, res, next) => {
         {
           association: 'doctor',
           include: [{ association: 'user', attributes: ['firstName', 'lastName'] }]
+        },
+        {
+          association: 'prescriptionDetails'
         }
       ]
     });
@@ -641,6 +651,9 @@ const completeAppointment = async (req, res, next) => {
       ]
     });
 
+    // Create basic medical record for completed appointment (if no prescription exists)
+    await createBasicMedicalRecord(updatedAppointment);
+
     res.json({
       success: true,
       message: 'Appointment marked as completed',
@@ -648,6 +661,97 @@ const completeAppointment = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+// Helper function to create basic medical record for completed appointment
+const createBasicMedicalRecord = async (appointment) => {
+  try {
+    // Check if a medical record already exists for this appointment
+    const existingRecord = await MedicalRecord.findOne({
+      where: { appointmentId: appointment.id }
+    });
+
+    if (existingRecord) {
+      console.log(`Medical record already exists for appointment ${appointment.id}`);
+      return;
+    }
+
+    const patient = appointment.patient;
+    const doctor = appointment.doctor;
+
+    // Create comprehensive description from appointment data
+    let description = `APPOINTMENT DETAILS\n`;
+    description += `==================\n\n`;
+    description += `Date: ${new Date(appointment.appointmentDate).toLocaleDateString()}\n`;
+    description += `Time: ${appointment.appointmentTime}\n`;
+    description += `Type: ${appointment.type.replace('_', ' ')}\n`;
+    description += `Duration: ${appointment.duration} minutes\n`;
+    description += `Serial Number: ${appointment.serialNumber || 'N/A'}\n`;
+    description += `Status: ${appointment.status}\n\n`;
+
+    if (appointment.reason) {
+      description += `REASON FOR VISIT:\n${appointment.reason}\n\n`;
+    }
+
+    if (appointment.symptoms) {
+      description += `SYMPTOMS:\n${appointment.symptoms}\n\n`;
+    }
+
+    if (appointment.notes) {
+      description += `DOCTOR'S NOTES:\n${appointment.notes}\n\n`;
+    }
+
+    if (appointment.diagnosis) {
+      description += `DIAGNOSIS:\n${appointment.diagnosis}\n\n`;
+    }
+
+    if (appointment.prescription) {
+      description += `PRESCRIPTION:\n${appointment.prescription}\n\n`;
+    }
+
+    if (appointment.followUpDate) {
+      description += `FOLLOW-UP DATE:\n${new Date(appointment.followUpDate).toLocaleDateString()}\n\n`;
+    }
+
+    if (appointment.meetingLink) {
+      description += `MEETING LINK:\n${appointment.meetingLink}\n\n`;
+    }
+
+    if (appointment.fee) {
+      description += `CONSULTATION FEE:\n${appointment.fee} BDT\n\n`;
+    }
+
+    if (appointment.paymentStatus) {
+      description += `PAYMENT STATUS:\n${appointment.paymentStatus}\n\n`;
+    }
+
+    if (appointment.startedAt) {
+      description += `APPOINTMENT STARTED:\n${new Date(appointment.startedAt).toLocaleString()}\n\n`;
+    }
+
+    if (appointment.completedAt) {
+      description += `APPOINTMENT COMPLETED:\n${new Date(appointment.completedAt).toLocaleString()}\n\n`;
+    }
+
+    // Create medical record
+    await MedicalRecord.create({
+      patientId: patient.id,
+      doctorId: doctor.id,
+      appointmentId: appointment.id,
+      recordType: 'consultation',
+      title: `Appointment - ${new Date(appointment.appointmentDate).toLocaleDateString()}`,
+      description: description,
+      diagnosis: appointment.diagnosis || null,
+      treatment: appointment.prescription || null,
+      medications: appointment.prescription || null,
+      recordDate: new Date(appointment.appointmentDate)
+    });
+
+    console.log(`Medical record created for appointment ${appointment.id}`);
+  } catch (error) {
+    console.error('Error creating medical record:', error);
+    // Don't throw error to avoid breaking appointment completion
   }
 };
 

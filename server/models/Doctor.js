@@ -21,7 +21,7 @@ const Doctor = sequelize.define('Doctor', {
     unique: true,
     comment: 'BMDC Registration Number - unique identifier for doctors'
   },
-  specialization: {
+  department: {
     type: DataTypes.STRING(100),
     allowNull: true
   },

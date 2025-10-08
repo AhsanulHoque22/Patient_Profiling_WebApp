@@ -5,10 +5,13 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
+import RoleBasedRedirect from './components/RoleBasedRedirect';
 
 // Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import PatientProfile from './pages/PatientProfile';
 import DoctorDashboard from './pages/DoctorDashboard';
@@ -20,6 +23,12 @@ import MedicalRecords from './pages/MedicalRecords';
 import Users from './pages/Users';
 import Doctors from './pages/Doctors';
 import Patients from './pages/Patients';
+import AdminDoctors from './pages/AdminDoctors';
+import AdminPatients from './pages/AdminPatients';
+import AdminRatings from './pages/AdminRatings';
+import LabReports from './pages/LabReports';
+import AdminLabReports from './pages/AdminLabReports';
+import AdminLabTests from './pages/AdminLabTests';
 import NotFound from './pages/NotFound';
 
 // Create a client
@@ -42,6 +51,8 @@ function App() {
               {/* Public routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               
               {/* Protected routes */}
               <Route path="/" element={
@@ -49,18 +60,100 @@ function App() {
                   <Layout />
                 </ProtectedRoute>
               }>
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="profile" element={<PatientProfile />} />
-                <Route path="doctor-profile" element={<DoctorProfile />} />
-                <Route path="doctor-dashboard" element={<DoctorDashboard />} />
-                <Route path="admin-dashboard" element={<AdminDashboard />} />
-                <Route path="appointments" element={<Appointments />} />
-                <Route path="doctor-appointments" element={<DoctorAppointments />} />
-                <Route path="medical-records" element={<MedicalRecords />} />
-                <Route path="users" element={<Users />} />
-                <Route path="doctors" element={<Doctors />} />
-                <Route path="patients" element={<Patients />} />
+                <Route index element={<RoleBasedRedirect />} />
+                
+                {/* Patient-only routes */}
+                <Route path="dashboard" element={
+                  <ProtectedRoute requiredRole="patient">
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="profile" element={
+                  <ProtectedRoute requiredRole="patient">
+                    <PatientProfile />
+                  </ProtectedRoute>
+                } />
+                <Route path="appointments" element={
+                  <ProtectedRoute requiredRole="patient">
+                    <Appointments />
+                  </ProtectedRoute>
+                } />
+                <Route path="medical-records" element={
+                  <ProtectedRoute requiredRole="patient">
+                    <MedicalRecords />
+                  </ProtectedRoute>
+                } />
+                <Route path="lab-reports" element={
+                  <ProtectedRoute requiredRole="patient">
+                    <LabReports />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Doctor-only routes */}
+                <Route path="doctor-profile" element={
+                  <ProtectedRoute requiredRole="doctor">
+                    <DoctorProfile />
+                  </ProtectedRoute>
+                } />
+                <Route path="doctor-dashboard" element={
+                  <ProtectedRoute requiredRole="doctor">
+                    <DoctorDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="doctor-appointments" element={
+                  <ProtectedRoute requiredRole="doctor">
+                    <DoctorAppointments />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Admin-only routes */}
+                <Route path="admin-dashboard" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="users" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <Users />
+                  </ProtectedRoute>
+                } />
+                <Route path="admin-doctors" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminDoctors />
+                  </ProtectedRoute>
+                } />
+                <Route path="admin-patients" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminPatients />
+                  </ProtectedRoute>
+                } />
+                <Route path="admin-lab-reports" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminLabReports />
+                  </ProtectedRoute>
+                } />
+                <Route path="admin-lab-tests" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminLabTests />
+                  </ProtectedRoute>
+                } />
+                <Route path="admin-ratings" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminRatings />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Patient-facing routes */}
+                <Route path="doctors" element={
+                  <ProtectedRoute requiredRole="patient">
+                    <Doctors />
+                  </ProtectedRoute>
+                } />
+                <Route path="patients" element={
+                  <ProtectedRoute requiredRole="doctor">
+                    <Patients />
+                  </ProtectedRoute>
+                } />
               </Route>
               
               {/* 404 route */}

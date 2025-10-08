@@ -3,8 +3,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { CalendarIcon, ClockIcon, UserIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ClockIcon, UserIcon, PlusIcon, DocumentTextIcon, StarIcon, VideoCameraIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
+import PrescriptionView from '../components/PrescriptionView';
+import RatingModal from '../components/RatingModal';
+import VideoConsultation from '../components/VideoConsultation';
+import { getDepartmentLabel } from '../utils/departments';
 
 const Appointments: React.FC = () => {
   const { user } = useAuth();
@@ -13,7 +17,10 @@ const Appointments: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [prescriptionData, setPrescriptionData] = useState<any>(null);
   const [bookingForm, setBookingForm] = useState({
     doctorId: '',
     appointmentDate:'',
@@ -28,6 +35,7 @@ const Appointments: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [doctorFilter, setDoctorFilter] = useState<string>('all');
+  const [appointmentRatings, setAppointmentRatings] = useState<{[key: number]: number}>({});
 
   // Fetch appointments using React Query for automatic refetching
   const { data: appointmentsData, refetch: refetchAppointments } = useQuery({
@@ -40,9 +48,49 @@ const Appointments: React.FC = () => {
     refetchInterval: 30000, // Refetch every 30 seconds to get real-time updates
   });
 
+  // Fetch patient's ratings to check which appointments are already rated
+  const { data: patientRatingsData } = useQuery({
+    queryKey: ['patient-ratings', user?.id],
+    queryFn: async () => {
+      const response = await axios.get('/ratings/my-ratings');
+      return response.data.data.ratings || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Create a map of appointment IDs to ratings
+  React.useEffect(() => {
+    if (patientRatingsData) {
+      const ratingMap: {[key: number]: number} = {};
+      patientRatingsData.forEach((rating: any) => {
+        ratingMap[rating.appointmentId] = rating.rating;
+      });
+      setAppointmentRatings(ratingMap);
+    }
+  }, [patientRatingsData]);
+
+  // Debug effect to track filter changes
+  useEffect(() => {
+    console.log('Filters changed:', { statusFilter, typeFilter, doctorFilter });
+  }, [statusFilter, typeFilter, doctorFilter]);
+
   // Filter and sort appointments
   const appointments = (appointmentsData || [])
     .filter((apt: any) => {
+      // Debug logging for filtering
+      console.log('Filtering appointment:', {
+        id: apt.id,
+        status: apt.status,
+        type: apt.type,
+        doctorId: apt.doctorId,
+        statusFilter,
+        typeFilter,
+        doctorFilter,
+        statusMatch: statusFilter === 'all' || apt.status === statusFilter,
+        typeMatch: typeFilter === 'all' || apt.type === typeFilter,
+        doctorMatch: doctorFilter === 'all' || apt.doctorId.toString() === doctorFilter
+      });
+      
       if (statusFilter !== 'all' && apt.status !== statusFilter) return false;
       if (typeFilter !== 'all' && apt.type !== typeFilter) return false;
       if (doctorFilter !== 'all' && apt.doctorId.toString() !== doctorFilter) return false;
@@ -55,6 +103,18 @@ const Appointments: React.FC = () => {
       return dateB - dateA;
     });
 
+  // Debug logging for appointments data
+  console.log('Appointments data:', appointmentsData);
+  console.log('Appointments count:', appointmentsData?.length || 0);
+  if (appointmentsData && appointmentsData.length > 0) {
+    console.log('Sample appointment:', appointmentsData[0]);
+    console.log('Available statuses:', Array.from(new Set(appointmentsData.map((apt: any) => apt.status))));
+    console.log('Available types:', Array.from(new Set(appointmentsData.map((apt: any) => apt.type))));
+    console.log('Available doctor IDs:', Array.from(new Set(appointmentsData.map((apt: any) => apt.doctorId))));
+  }
+  console.log('Filtered appointments:', appointments);
+  console.log('Current filters:', { statusFilter, typeFilter, doctorFilter });
+
   // Get unique doctors from appointments for filter dropdown
   const uniqueDoctors = Array.from(
     new Map(
@@ -65,7 +125,7 @@ const Appointments: React.FC = () => {
           {
             id: apt.doctorId,
             name: `Dr. ${apt.doctor.user.firstName} ${apt.doctor.user.lastName}`,
-            specialization: apt.doctor.specialization
+            department: apt.doctor.department
           }
         ])
     ).values()
@@ -177,10 +237,35 @@ const Appointments: React.FC = () => {
   };
 
   // Handle view appointment
-  const handleViewAppointment = (appointment: any) => {
+  const handleViewAppointment = async (appointment: any) => {
     setSelectedAppointment(appointment);
     setShowViewModal(true);
+    
+    // Fetch prescription data if appointment is completed or in progress
+    if (appointment.status === 'completed' || appointment.status === 'in_progress') {
+      try {
+        const response = await axios.get(`/prescriptions/appointment/${appointment.id}`);
+        setPrescriptionData(response.data.data.prescription);
+      } catch (error) {
+        console.log('No prescription found for this appointment');
+        setPrescriptionData(null);
+      }
+    } else {
+      setPrescriptionData(null);
+    }
   };
+
+  // Handle rate appointment
+  const handleRateAppointment = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setShowRatingModal(true);
+  };
+
+  const handleVideoCall = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setShowVideoModal(true);
+  };
+
 
   // Handle cancel appointment
   const handleCancelAppointment = async (appointmentId: number) => {
@@ -237,13 +322,16 @@ const Appointments: React.FC = () => {
               <label className="text-sm font-medium text-gray-700">Doctor:</label>
               <select
                 value={doctorFilter}
-                onChange={(e) => setDoctorFilter(e.target.value)}
+                onChange={(e) => {
+                  console.log('Doctor filter changed:', e.target.value);
+                  setDoctorFilter(e.target.value);
+                }}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm min-w-[200px]"
               >
                 <option value="all">All Doctors</option>
                 {uniqueDoctors.map((doctor: any) => (
                   <option key={doctor.id} value={doctor.id}>
-                    {doctor.name} {doctor.specialization && `(${doctor.specialization})`}
+                    {doctor.name} {doctor.department && `(${getDepartmentLabel(doctor.department)})`}
                   </option>
                 ))}
               </select>
@@ -253,7 +341,10 @@ const Appointments: React.FC = () => {
               <label className="text-sm font-medium text-gray-700">Status:</label>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => {
+                  console.log('Status filter changed:', e.target.value);
+                  setStatusFilter(e.target.value);
+                }}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm"
               >
                 <option value="all">All Status</option>
@@ -270,7 +361,10 @@ const Appointments: React.FC = () => {
               <label className="text-sm font-medium text-gray-700">Type:</label>
               <select
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
+                onChange={(e) => {
+                  console.log('Type filter changed:', e.target.value);
+                  setTypeFilter(e.target.value);
+                }}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm"
               >
                 <option value="all">All Types</option>
@@ -364,13 +458,38 @@ const Appointments: React.FC = () => {
                       >
                         View
                       </button>
+                      {appointment.status === 'completed' && (
+                        <button 
+                          onClick={() => handleRateAppointment(appointment)}
+                          className={`flex items-center gap-1 ${
+                            appointmentRatings[appointment.id] 
+                              ? 'text-green-600 hover:text-green-700' 
+                              : 'text-yellow-600 hover:text-yellow-700'
+                          }`}
+                        >
+                          <StarIcon className="h-4 w-4" />
+                          {appointmentRatings[appointment.id] ? (
+                            <span>Rated ({appointmentRatings[appointment.id]}/5)</span>
+                          ) : (
+                            'Rate'
+                          )}
+                        </button>
+                      )}
+                      {appointment.type === 'telemedicine' && (appointment.status === 'confirmed' || appointment.status === 'in_progress') && (
+                        <button 
+                          onClick={() => handleVideoCall(appointment)}
+                          className="flex items-center gap-1 text-blue-600 hover:text-blue-700"
+                        >
+                          <VideoCameraIcon className="h-4 w-4" />
+                          Enter Room
+                        </button>
+                      )}
                       {appointment.status === 'scheduled' || appointment.status === 'confirmed' ? (
                         <button 
                           onClick={() => handleCancelAppointment(appointment.id)}
                           className="text-red-600 hover:text-red-900"
                         >
                           Cancel
-
                         </button>
                       ) : null}
                     </td>
@@ -415,7 +534,7 @@ const Appointments: React.FC = () => {
                     <option value="">Choose a doctor</option>
                     {doctors.map((doctor) => (
                       <option key={doctor.id} value={doctor.id}>
-                        Dr. {doctor.user.firstName} {doctor.user.lastName} - {doctor.specialization}
+                        Dr. {doctor.user.firstName} {doctor.user.lastName} - {getDepartmentLabel(doctor.department)}
                       </option>
                     ))}
                   </select>
@@ -651,9 +770,9 @@ const Appointments: React.FC = () => {
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Specialization</label>
-                      <p className="text-gray-900 capitalize">
-                        {selectedAppointment.doctor?.specialization?.replace('_', ' ') || 'General Practice'}
+                      <label className="text-sm font-medium text-gray-500">Department</label>
+                      <p className="text-gray-900">
+                        {getDepartmentLabel(selectedAppointment.doctor?.department || '') || 'General Medicine'}
                       </p>
                     </div>
                     <div>
@@ -730,6 +849,17 @@ const Appointments: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Prescription Details */}
+                {prescriptionData && (
+                  <div className="col-span-full">
+                    <PrescriptionView 
+                      prescriptionData={prescriptionData}
+                      appointmentData={selectedAppointment}
+                      userRole={user?.role}
+                    />
+                  </div>
+                )}
+
                 {/* Emergency Contact */}
                 <div className="col-span-full space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900">Emergency Contact</h3>
@@ -757,6 +887,33 @@ const Appointments: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Rating Modal */}
+      {showRatingModal && selectedAppointment && (
+        <RatingModal
+          isOpen={showRatingModal}
+          onClose={() => setShowRatingModal(false)}
+          appointment={selectedAppointment}
+          onRatingSubmitted={() => {
+            // Refresh appointments and ratings to show updated data
+            refetchAppointments();
+            // Invalidate the patient ratings query to refetch
+            queryClient.invalidateQueries({ queryKey: ['patient-ratings', user?.id] });
+          }}
+        />
+      )}
+
+      {/* Video Consultation Modal */}
+      {showVideoModal && selectedAppointment && (
+        <VideoConsultation
+          isOpen={showVideoModal}
+          onClose={() => setShowVideoModal(false)}
+          appointmentId={selectedAppointment.id}
+          doctorName={`Dr. ${selectedAppointment.doctor.user.firstName} ${selectedAppointment.doctor.user.lastName}`}
+          patientName={`${selectedAppointment.patient.user.firstName} ${selectedAppointment.patient.user.lastName}`}
+          userRole="patient"
+        />
       )}
     </div>
   );

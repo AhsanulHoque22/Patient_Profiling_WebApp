@@ -1,4 +1,4 @@
-const { Doctor, User, Appointment, Patient, MedicalRecord } = require('../models');
+const { Doctor, User, Appointment, Patient, MedicalRecord, DoctorRating } = require('../models');
 const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 const path = require('path');
@@ -6,22 +6,31 @@ const path = require('path');
 // Get all doctors (public endpoint)
 const getAllDoctors = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, specialization, search } = req.query;
+    const { page = 1, limit = 10, department, search } = req.query;
 
     const whereClause = {
       isActive: true, // Only show active users
       role: 'doctor'
     };
 
+    const doctorWhereClause = {
+      isVerified: true // Only show verified doctors to patients
+    };
+    
+    if (department) {
+      doctorWhereClause.department = department;
+    }
+
     if (search) {
       whereClause[Op.or] = [
         { '$user.firstName$': { [Op.like]: `%${search}%` } },
         { '$user.lastName$': { [Op.like]: `%${search}%` } },
-        { specialization: { [Op.like]: `%${search}%` } }
+        { department: { [Op.like]: `%${search}%` } }
       ];
     }
 
     const doctors = await Doctor.findAndCountAll({
+      where: doctorWhereClause,
       include: [
         {
           association: 'user',
@@ -35,10 +44,33 @@ const getAllDoctors = async (req, res, next) => {
       distinct: true
     });
 
+    // Calculate average ratings for each doctor
+    const doctorsWithRatings = await Promise.all(
+      doctors.rows.map(async (doctor) => {
+        const ratingStats = await DoctorRating.findOne({
+          where: { doctorId: doctor.id },
+          attributes: [
+            [DoctorRating.sequelize.fn('AVG', DoctorRating.sequelize.col('rating')), 'averageRating'],
+            [DoctorRating.sequelize.fn('COUNT', DoctorRating.sequelize.col('id')), 'totalRatings']
+          ],
+          raw: true
+        });
+
+        const averageRating = parseFloat(ratingStats?.averageRating || 0);
+        const totalRatings = parseInt(ratingStats?.totalRatings || 0);
+
+        return {
+          ...doctor.toJSON(),
+          calculatedRating: averageRating,
+          totalRatings: totalRatings
+        };
+      })
+    );
+
     res.json({
       success: true,
       data: {
-        doctors: doctors.rows,
+        doctors: doctorsWithRatings,
         pagination: {
           currentPage: parseInt(page),
           totalPages: Math.ceil(doctors.count / parseInt(limit)),
@@ -96,7 +128,7 @@ const updateDoctorProfile = async (req, res, next) => {
     }
 
     const doctorId = req.params.id;
-    const { licenseNumber, specialization, experience, education, certifications, consultationFee, availability, bio } = req.body;
+    const { licenseNumber, department, experience, education, certifications, consultationFee, availability, bio } = req.body;
 
     const doctor = await Doctor.findByPk(doctorId);
     if (!doctor) {
@@ -108,7 +140,7 @@ const updateDoctorProfile = async (req, res, next) => {
 
     await doctor.update({
       licenseNumber,
-      specialization,
+      department,
       experience,
       education,
       certifications,
@@ -146,12 +178,11 @@ const getDoctorAppointments = async (req, res, next) => {
     if (status) whereClause.status = status;
     if (type) whereClause.type = type;
     if (date) {
-      const startDate = new Date(date);
-      const endDate = new Date(date);
-      endDate.setDate(endDate.getDate() + 1);
+      const startDate = new Date(date + 'T00:00:00.000Z');
+      const endDate = new Date(date + 'T23:59:59.999Z');
       whereClause.appointmentDate = {
         [Op.gte]: startDate,
-        [Op.lt]: endDate
+        [Op.lte]: endDate
       };
     }
 
@@ -163,7 +194,7 @@ const getDoctorAppointments = async (req, res, next) => {
           include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email', 'phone'] }]
         }
       ],
-      order: [['appointmentDate', 'ASC'], ['appointmentTime', 'ASC']],
+      order: [['appointmentDate', 'DESC'], ['appointmentTime', 'DESC']],
       limit: parseInt(limit),
       offset: (parseInt(page) - 1) * parseInt(limit)
     });
@@ -289,8 +320,8 @@ const getDoctorDashboardStats = async (req, res, next) => {
   try {
     const doctorId = req.params.id;
     const today = new Date();
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
 
     const [
       totalAppointments,
@@ -386,7 +417,7 @@ const updateCurrentDoctorProfile = async (req, res, next) => {
 
     const userId = req.user.id; // From auth middleware
     const { 
-      specialization,
+      department,
       experience,
       education,
       certifications,
@@ -414,7 +445,7 @@ const updateCurrentDoctorProfile = async (req, res, next) => {
     }
 
     await doctor.update({
-      specialization,
+      department,
       experience,
       education,
       certifications,

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import { useAuth } from '../context/AuthContext';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
@@ -11,10 +9,6 @@ interface LoginFormData {
   password: string;
 }
 
-const schema = yup.object({
-  email: yup.string().email('Invalid email').required('Email is required'),
-  password: yup.string().required('Password is required'),
-});
 
 const Login: React.FC = () => {
   const { login } = useAuth();
@@ -23,22 +17,28 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = location.state?.from?.pathname || '/';
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
-    resolver: yupResolver(schema),
+    defaultValues: {
+      email: '',
+      password: ''
+    }
   });
 
   const onSubmit = async (data: LoginFormData) => {
+    console.log('Login form submitted with data:', data);
     setIsLoading(true);
     try {
       await login(data.email, data.password);
+      console.log('Login successful, navigating to:', from);
       navigate(from, { replace: true });
     } catch (error) {
+      console.error('Login error:', error);
       // Error is handled in the auth context
     } finally {
       setIsLoading(false);
@@ -69,7 +69,13 @@ const Login: React.FC = () => {
                 Email address
               </label>
               <input
-                {...register('email')}
+                {...register('email', { 
+                  required: 'Email is required',
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: 'Invalid email address'
+                  }
+                })}
                 type="email"
                 autoComplete="email"
                 className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
@@ -86,7 +92,13 @@ const Login: React.FC = () => {
                 Password
               </label>
               <input
-                {...register('password')}
+                {...register('password', { 
+                  required: 'Password is required',
+                  minLength: {
+                    value: 6,
+                    message: 'Password must be at least 6 characters'
+                  }
+                })}
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 className={`appearance-none rounded-none relative block w-full px-3 py-2 pr-10 border ${
@@ -125,9 +137,9 @@ const Login: React.FC = () => {
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-primary-600 hover:text-primary-500">
+              <Link to="/forgot-password" className="font-medium text-primary-600 hover:text-primary-500">
                 Forgot your password?
-              </a>
+              </Link>
             </div>
           </div>
 

@@ -7,9 +7,31 @@ const router = express.Router();
 
 // Patient profile validation
 const updatePatientValidation = [
-  body('bloodType').optional().isIn(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).withMessage('Valid blood type is required'),
-  body('emergencyContact').optional().isLength({ min: 2, max: 100 }).withMessage('Emergency contact name must be 2-100 characters'),
-  body('emergencyPhone').optional().isMobilePhone().withMessage('Valid emergency phone number is required'),
+  body('bloodType').optional().custom((value) => {
+    if (value && !['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].includes(value)) {
+      throw new Error('Valid blood type is required');
+    }
+    return true;
+  }),
+  body('emergencyContact').optional().custom((value) => {
+    if (value && (value.length < 2 || value.length > 100)) {
+      throw new Error('Emergency contact name must be 2-100 characters');
+    }
+    return true;
+  }),
+  body('emergencyPhone').optional().custom((value) => {
+    // Allow empty strings
+    if (!value || value.trim() === '') {
+      return true;
+    }
+    // Remove spaces, dashes, and parentheses for validation
+    const cleaned = value.replace(/[\s\-\(\)]/g, '');
+    // Allow phone numbers starting with + or 0-9, with 7-15 digits
+    if (!/^[\+]?[\d]{7,15}$/.test(cleaned)) {
+      throw new Error('Valid emergency phone number is required (7-15 digits)');
+    }
+    return true;
+  }),
   body('insuranceProvider').optional().isLength({ max: 100 }).withMessage('Insurance provider name too long'),
   body('insuranceNumber').optional().isLength({ max: 50 }).withMessage('Insurance number too long')
 ];
