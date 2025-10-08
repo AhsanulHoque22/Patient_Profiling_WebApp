@@ -108,6 +108,11 @@ const LabTestOrder = sequelize.define('LabTestOrder', {
     allowNull: true,
     comment: 'Unique sample ID for lab processing'
   },
+  testReports: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    comment: 'Array of uploaded test report files with metadata'
+  },
 }, {
   tableName: 'lab_test_orders',
   timestamps: true,

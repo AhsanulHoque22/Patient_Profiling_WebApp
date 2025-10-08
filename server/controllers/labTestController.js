@@ -2936,14 +2936,15 @@ const getPatientLabReportsForDoctor = async (req, res, next) => {
     const { patientId } = req.params;
     const { status, page = 1, limit = 50 } = req.query;
     
-    console.log('Getting lab reports for patient:', patientId, 'with status:', status);
+    console.log('🔍 NEW CODE: Getting lab reports for patient:', patientId, 'with status:', status);
+    console.log('🔍 This is the UPDATED version of the code WITHOUT testReports association');
     
     const whereClause = { patientId: parseInt(patientId) };
     if (status && status !== 'all' && status !== '') {
       whereClause.status = status;
     }
     
-    // Get lab test orders with reported status
+    // Get lab test orders WITHOUT testReports association (it's a JSON field, not an association)
     const orders = await LabTestOrder.findAndCountAll({
       where: whereClause,
       include: [
@@ -2971,15 +2972,18 @@ const getPatientLabReportsForDoctor = async (req, res, next) => {
         where: { id: order.testIds }
       });
       order.dataValues.testDetails = tests;
-      
-      // Add test reports/files if available
-      if (order.testReports && order.testReports.length > 0) {
-        order.dataValues.testReports = order.testReports;
-      }
     }
     
     console.log('Found lab orders:', orders.count, 'for patient:', patientId);
-    console.log('Orders data:', orders.rows.map(o => ({ id: o.id, status: o.status, testIds: o.testIds })));
+    console.log('Orders data:', orders.rows.map(o => ({ 
+      id: o.id, 
+      status: o.status, 
+      testIds: o.testIds,
+      testReports: o.testReports,
+      testReportsType: typeof o.testReports,
+      testReportsLength: Array.isArray(o.testReports) ? o.testReports.length : 'not array',
+      hasTestReports: o.testReports && Array.isArray(o.testReports) && o.testReports.length > 0
+    })));
     
     res.json({
       success: true,
@@ -3077,7 +3081,9 @@ const getPatientPrescriptionLabTestsForDoctor = async (req, res, next) => {
             ...test,
             takenDate: prescription.createdAt, // Date when prescription was created
             prescriptionId: prescription.id,
-            appointmentDate: prescription.appointment?.appointmentDate
+            appointmentDate: prescription.appointment?.appointmentDate,
+            // Preserve testReports data for result files
+            resultFiles: test.testReports || []
           }));
           
           prescription.dataValues.parsedTests = enhancedTests;
@@ -3089,6 +3095,17 @@ const getPatientPrescriptionLabTestsForDoctor = async (req, res, next) => {
     }
     
     console.log('Found prescription lab tests:', processedPrescriptions.length, 'for patient:', patientId);
+    
+    // Debug logging to show testReports data
+    console.log('🔍 DEBUG: Prescription lab tests with resultFiles:');
+    processedPrescriptions.forEach(prescription => {
+      console.log(`Prescription ${prescription.id}:`, prescription.dataValues.parsedTests?.map(test => ({
+        name: test.name,
+        status: test.status,
+        resultFiles: test.resultFiles,
+        hasResultFiles: test.resultFiles && test.resultFiles.length > 0
+      })));
+    });
     
     res.json({
       success: true,

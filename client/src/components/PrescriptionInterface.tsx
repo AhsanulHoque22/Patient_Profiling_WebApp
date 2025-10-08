@@ -170,22 +170,29 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
     enabled: !!appointmentId,
   });
 
-  // Fetch patient's lab test orders with 'reported' status
+  // Fetch patient's lab test orders (all statuses, like patient lab reports page)
   const { data: patientLabOrders, isLoading: labOrdersLoading, error: labOrdersError } = useQuery({
-    queryKey: ['patient-lab-orders-reported', patientId || appointmentData?.patient?.id],
+    queryKey: ['patient-lab-orders-all', patientId || appointmentData?.patient?.id],
     queryFn: async () => {
       const currentPatientId = patientId || appointmentData?.patient?.id;
       console.log('Fetching lab reports for patient:', currentPatientId);
       try {
-        // Use the new patient-specific endpoint for doctors
+        // Use the same endpoint as patient lab reports page - get all orders, no status filter
         const response = await axios.get(`/lab-tests/patients/${currentPatientId}/lab-reports`, {
           params: {
-            status: 'reported', // Get only reported tests
             limit: 100
+            // Removed status: 'reported' filter to show all orders like patient lab reports page
           }
         });
         console.log('Lab reports API response:', response.data);
-        return response.data.data.orders || [];
+        const orders = response.data.data.orders || [];
+        console.log('🔍 DEBUG: Lab orders with testReports:', orders.map((order: any) => ({
+          id: order.id,
+          status: order.status,
+          testReports: order.testReports,
+          hasTestReports: order.testReports && order.testReports.length > 0
+        })));
+        return orders;
       } catch (error) {
         console.error('Error fetching lab reports:', error);
         throw error;
@@ -194,22 +201,32 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
     enabled: !!(patientId || appointmentData?.patient?.id) && userRole === 'doctor',
   });
 
-  // Fetch patient's prescription lab tests with 'reported' status
+  // Fetch patient's prescription lab tests (all statuses, like patient lab reports page)
   const { data: patientPrescriptionLabTests, isLoading: prescriptionLabTestsLoading, error: prescriptionLabTestsError } = useQuery({
-    queryKey: ['patient-prescription-lab-tests-reported', patientId || appointmentData?.patient?.id],
+    queryKey: ['patient-prescription-lab-tests-all', patientId || appointmentData?.patient?.id],
     queryFn: async () => {
       const currentPatientId = patientId || appointmentData?.patient?.id;
       console.log('Fetching prescription lab tests for patient:', currentPatientId);
       try {
-        // Use the new patient-specific endpoint for doctors
+        // Use the same endpoint as patient lab reports page - get all tests, no status filter
         const response = await axios.get(`/lab-tests/patients/${currentPatientId}/prescription-lab-tests`, {
           params: {
-            status: 'reported', // Get only reported tests
             limit: 100
+            // Removed status: 'reported' filter to show all tests like patient lab reports page
           }
         });
         console.log('Prescription lab tests API response:', response.data);
-        return response.data.data.prescriptions || [];
+        const prescriptions = response.data.data.prescriptions || [];
+        console.log('🔍 DEBUG: Prescription lab tests with resultFiles:', prescriptions.map((prescription: any) => ({
+          id: prescription.id,
+          parsedTests: prescription.parsedTests?.map((test: any) => ({
+            name: test.name,
+            status: test.status,
+            resultFiles: test.resultFiles,
+            hasResultFiles: test.resultFiles && test.resultFiles.length > 0
+          }))
+        })));
+        return prescriptions;
       } catch (error) {
         console.error('Error fetching prescription lab tests:', error);
         throw error;
@@ -281,13 +298,13 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
     const loadTestReports = async () => {
       if (patientId && userRole === 'doctor') {
         try {
-          // Fetch prescription lab tests
-          const prescriptionResponse = await axios.get(`/admin/prescription-lab-tests?patientId=${patientId}`);
-          const prescriptionTests = prescriptionResponse.data.data || [];
+          // Fetch prescription lab tests using doctor endpoint
+          const prescriptionResponse = await axios.get(`/lab-tests/patients/${patientId}/prescription-lab-tests`);
+          const prescriptionTests = prescriptionResponse.data.data.prescriptions || [];
           
-          // Fetch regular lab orders
-          const labOrdersResponse = await axios.get(`/admin/lab-orders?patientId=${patientId}`);
-          const labOrders = labOrdersResponse.data.data || [];
+          // Fetch regular lab orders using doctor endpoint
+          const labOrdersResponse = await axios.get(`/lab-tests/patients/${patientId}/lab-reports`);
+          const labOrders = labOrdersResponse.data.data.orders || [];
           
           // Combine and extract reports
           const allReports: TestReport[] = [];
@@ -1190,13 +1207,14 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
         {/* Reports Tab */}
         {activeTab === 'reports' && (
           <div className="space-y-6">
-            <h4 className="text-md font-medium text-gray-900">Lab Reports</h4>
+            <h4 className="text-md font-medium text-gray-900">Patient Lab Reports</h4>
+            <p className="text-sm text-gray-600">View all lab test orders and prescription lab tests for this patient</p>
             
              {/* Patient Lab Reports */}
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <h5 className="font-medium text-green-900 mb-3 flex items-center gap-2">
                     <BeakerIcon className="h-5 w-5" />
-                    Patient Lab Reports
+                    Lab Test Orders
                   </h5>
                   
                   {/* Lab Test Orders */}
@@ -1218,6 +1236,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                                   <p className="text-xs text-gray-600">
                                     Status: <span className={`px-2 py-1 rounded text-xs ${
                                       order.status === 'reported' ? 'bg-green-100 text-green-800' :
+                                      order.status === 'completed' ? 'bg-green-100 text-green-800' :
                                       order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
                                       order.status === 'ordered' ? 'bg-blue-100 text-blue-800' :
                                       'bg-gray-100 text-gray-800'
@@ -1275,7 +1294,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                                     </div>
                                     
                                     {/* Test Results/Files */}
-                                    {order.status === 'reported' && order.testReports && order.testReports.length > 0 && (
+                                    {(order.status === 'reported' || order.status === 'completed') && order.testReports && order.testReports.length > 0 && (
                                       <div className="mt-2 pt-2 border-t border-gray-200">
                                         <p className="text-xs font-medium text-gray-700 mb-1">Result Files:</p>
                                         <div className="space-y-1">
@@ -1374,6 +1393,8 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                                         <div className="flex flex-col items-end space-y-1">
                                           <span className={`px-2 py-1 rounded text-xs font-medium ${
                                             test.status === 'reported' ? 'bg-green-100 text-green-800' :
+                                            test.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                            test.status === 'confirmed' ? 'bg-green-100 text-green-800' :
                                             test.status === 'ordered' ? 'bg-yellow-100 text-yellow-800' :
                                             test.status === 'approved' ? 'bg-blue-100 text-blue-800' :
                                             'bg-gray-100 text-gray-800'
@@ -1390,7 +1411,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                                     </div>
                                     
                                     {/* Test Results/Files */}
-                                    {test.status === 'reported' && test.resultFiles && test.resultFiles.length > 0 && (
+                                    {(test.status === 'reported' || test.status === 'completed' || test.status === 'confirmed') && test.resultFiles && test.resultFiles.length > 0 && (
                                       <div className="mt-2 pt-2 border-t border-gray-200">
                                         <p className="text-xs font-medium text-gray-700 mb-1">Result Files:</p>
                                         <div className="space-y-1">
@@ -1474,7 +1495,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                     <div className="text-center py-4">
                       <BeakerIcon className="h-8 w-8 text-gray-300 mx-auto mb-2" />
                       <p className="text-sm text-gray-500">No lab reports found</p>
-                      <p className="text-xs text-gray-400">Patient has no previous lab tests with 'reported' status</p>
+                      <p className="text-xs text-gray-400">Patient has no lab test orders or prescription lab tests</p>
                     </div>
                   )}
                  </div>
