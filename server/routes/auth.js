@@ -12,7 +12,7 @@ const router = express.Router();
 
 // Public routes
 router.post('/register', registerValidation, authController.register);
-router.post('/login', loginValidation, authController.login);
+router.post('/login', authController.login);
 router.post('/forgot-password', authController.forgotPassword);
 router.get('/verify-reset-token', authController.verifyResetToken);
 router.post('/reset-password', authController.resetPassword);

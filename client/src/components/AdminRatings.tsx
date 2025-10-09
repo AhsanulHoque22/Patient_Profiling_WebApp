@@ -149,268 +149,299 @@ const AdminRatings: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-gradient-to-br from-indigo-50/80 to-cyan-50/80 backdrop-blur-sm rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <StarIcon className="h-6 w-6 text-blue-600" />
+            <div className="p-3 rounded-full bg-gradient-to-br from-indigo-400/20 to-cyan-400/20 backdrop-blur-sm">
+              <StarIcon className="h-6 w-6 text-indigo-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm text-gray-600">Average Rating</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.averageRating || '0.0'}</p>
+              <p className="text-sm font-medium text-indigo-700">Average Rating</p>
+              <p className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent">{stats.averageRating || '0.0'}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <div className="bg-gradient-to-br from-emerald-50/80 to-green-50/80 backdrop-blur-sm rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircleIcon className="h-6 w-6 text-green-600" />
+            <div className="p-3 rounded-full bg-gradient-to-br from-emerald-400/20 to-green-400/20 backdrop-blur-sm">
+              <CheckCircleIcon className="h-6 w-6 text-emerald-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm text-gray-600">Approved</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.approvedRatings || 0}</p>
+              <p className="text-sm font-medium text-emerald-700">Approved</p>
+              <p className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">{stats.approvedRatings || 0}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <div className="bg-gradient-to-br from-amber-50/80 to-orange-50/80 backdrop-blur-sm rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <ClockIcon className="h-6 w-6 text-yellow-600" />
+            <div className="p-3 rounded-full bg-gradient-to-br from-amber-400/20 to-orange-400/20 backdrop-blur-sm">
+              <ClockIcon className="h-6 w-6 text-amber-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.pendingRatings || 0}</p>
+              <p className="text-sm font-medium text-amber-700">Pending</p>
+              <p className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{stats.pendingRatings || 0}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <div className="bg-gradient-to-br from-rose-50/80 to-red-50/80 backdrop-blur-sm rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <XCircleIcon className="h-6 w-6 text-red-600" />
+            <div className="p-3 rounded-full bg-gradient-to-br from-rose-400/20 to-red-400/20 backdrop-blur-sm">
+              <XCircleIcon className="h-6 w-6 text-rose-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm text-gray-600">Rejected</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.rejectedRatings || 0}</p>
+              <p className="text-sm font-medium text-rose-700">Rejected</p>
+              <p className="text-2xl font-bold bg-gradient-to-r from-rose-600 to-red-600 bg-clip-text text-transparent">{stats.rejectedRatings || 0}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">Status:</label>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-100 to-purple-100 px-6 py-4">
+          <div className="flex items-center">
+            <StarIcon className="h-5 w-5 text-indigo-600 mr-2" />
+            <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Filters & Search</h3>
+          </div>
         </div>
+        <div className="p-6">
+          <div className="flex flex-wrap gap-6 items-center">
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-indigo-700">Status:</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all duration-300 text-sm"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">Rating:</label>
-          <select
-            value={ratingFilter}
-            onChange={(e) => setRatingFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm"
-          >
-            <option value="all">All Ratings</option>
-            <option value="5">5 Stars</option>
-            <option value="4">4 Stars</option>
-            <option value="3">3 Stars</option>
-            <option value="2">2 Stars</option>
-            <option value="1">1 Star</option>
-          </select>
-        </div>
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-indigo-700">Rating:</label>
+              <select
+                value={ratingFilter}
+                onChange={(e) => setRatingFilter(e.target.value)}
+                className="px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all duration-300 text-sm"
+              >
+                <option value="all">All Ratings</option>
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+              </select>
+            </div>
 
-        <div className="text-sm text-gray-600">
-          Showing {ratings.length} of {pagination?.totalRatings || 0} ratings
+            <div className="text-sm text-indigo-600 bg-gradient-to-r from-indigo-50 to-purple-50 px-4 py-2 rounded-lg">
+              Showing <span className="font-semibold text-indigo-800">{ratings.length}</span> of <span className="font-semibold text-indigo-800">{pagination?.totalRatings || 0}</span> ratings
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Ratings List */}
-      <div className="space-y-4">
-        {ratings.length === 0 ? (
-          <div className="text-center py-8">
-            <StarIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No ratings found</p>
-          </div>
-        ) : (
-          ratings.map((rating: Rating) => (
-            <div key={rating.id} className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-8 w-8 bg-primary-100 rounded-full flex items-center justify-center">
-                      <UserIcon className="h-4 w-4 text-primary-600" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-900">
-                          {rating.isAnonymous ? 'Anonymous Patient' : 
-                           `${rating.patient.user.firstName} ${rating.patient.user.lastName}`}
-                        </p>
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(rating.status)}`}>
-                          {getStatusIcon(rating.status)}
-                          <span className="ml-1">{rating.status}</span>
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        {renderStars(rating.rating)}
-                        <span className="text-gray-500">•</span>
-                        <span>Dr. {rating.appointment.doctor.user.firstName} {rating.appointment.doctor.user.lastName}</span>
-                        <span className="text-gray-500">•</span>
-                        <div className="flex items-center gap-1">
-                          <CalendarIcon className="h-3 w-3" />
-                          {new Date(rating.appointment.appointmentDate).toLocaleDateString()}
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden">
+        <div className="p-6">
+          <div className="space-y-4">
+            {ratings.length === 0 ? (
+              <div className="text-center py-12">
+                <StarIcon className="h-16 w-16 text-indigo-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">No Ratings Found</h3>
+                <p className="text-gray-500">No ratings match your current filters</p>
+              </div>
+            ) : (
+              ratings.map((rating: Rating) => (
+                <div key={rating.id} className="bg-gradient-to-br from-indigo-50/50 to-purple-50/50 backdrop-blur-sm rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:scale-[1.01]">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="h-12 w-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center">
+                          <UserIcon className="h-6 w-6 text-indigo-600" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <p className="font-semibold text-gray-900 text-lg">
+                              {rating.isAnonymous ? 'Anonymous Patient' : 
+                               `${rating.patient.user.firstName} ${rating.patient.user.lastName}`}
+                            </p>
+                            <span className={`px-3 py-1 text-xs font-semibold rounded-full backdrop-blur-sm ${getStatusColor(rating.status)}`}>
+                              {getStatusIcon(rating.status)}
+                              <span className="ml-1 capitalize">{rating.status}</span>
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-sm text-gray-600">
+                            {renderStars(rating.rating)}
+                            <span className="text-gray-400">•</span>
+                            <span className="font-medium">Dr. {rating.appointment.doctor.user.firstName} {rating.appointment.doctor.user.lastName}</span>
+                            <span className="text-gray-400">•</span>
+                            <div className="flex items-center gap-1">
+                              <CalendarIcon className="h-4 w-4" />
+                              {new Date(rating.appointment.appointmentDate).toLocaleDateString()}
+                            </div>
+                          </div>
                         </div>
                       </div>
+
+                      {rating.review && (
+                        <div className="mb-4 p-4 bg-white/60 backdrop-blur-sm rounded-lg">
+                          <p className="text-gray-700 leading-relaxed">{rating.review}</p>
+                        </div>
+                      )}
+
+                      {rating.feedback && (
+                        <div className="bg-gradient-to-r from-indigo-100/80 to-purple-100/80 backdrop-blur-sm rounded-lg p-4 mb-4">
+                          <p className="text-sm text-indigo-800">
+                            <span className="font-semibold">Admin Feedback:</span> {rating.feedback}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col space-y-2 ml-6">
+                      <button
+                        onClick={() => {
+                          setSelectedRating(rating);
+                          setShowDetailModal(true);
+                        }}
+                        className="flex items-center gap-2 text-indigo-600 hover:text-indigo-900 text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 transition-all duration-300 backdrop-blur-sm"
+                      >
+                        <EyeIcon className="h-4 w-4" />
+                        View Details
+                      </button>
+
+                      {rating.status === 'pending' && (
+                        <div className="flex flex-col space-y-2">
+                          <button
+                            onClick={() => handleStatusUpdate(rating.id, 'approved')}
+                            className="flex items-center gap-2 text-emerald-600 hover:text-emerald-900 text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-50 to-green-50 hover:from-emerald-100 hover:to-green-100 transition-all duration-300 backdrop-blur-sm"
+                          >
+                            <CheckCircleIcon className="h-4 w-4" />
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleStatusUpdate(rating.id, 'rejected')}
+                            className="flex items-center gap-2 text-rose-600 hover:text-rose-900 text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-rose-50 to-red-50 hover:from-rose-100 hover:to-red-100 transition-all duration-300 backdrop-blur-sm"
+                          >
+                            <XCircleIcon className="h-4 w-4" />
+                            Reject
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  {rating.review && (
-                    <div className="mb-3">
-                      <p className="text-gray-700">{rating.review}</p>
-                    </div>
-                  )}
-
-                  {rating.feedback && (
-                    <div className="bg-blue-50 rounded-lg p-3 mb-3">
-                      <p className="text-sm text-blue-800">
-                        <span className="font-medium">Feedback:</span> {rating.feedback}
-                      </p>
-                    </div>
-                  )}
                 </div>
-
-                <div className="flex space-x-2 ml-4">
-                  <button
-                    onClick={() => {
-                      setSelectedRating(rating);
-                      setShowDetailModal(true);
-                    }}
-                    className="flex items-center gap-1 text-primary-600 hover:text-primary-900 text-sm px-3 py-1 rounded hover:bg-primary-50 transition-colors"
-                  >
-                    <EyeIcon className="h-4 w-4" />
-                    View
-                  </button>
-
-                  {rating.status === 'pending' && (
-                    <>
-                      <button
-                        onClick={() => handleStatusUpdate(rating.id, 'approved')}
-                        className="flex items-center gap-1 text-green-600 hover:text-green-900 text-sm px-3 py-1 rounded hover:bg-green-50 transition-colors"
-                      >
-                        <CheckCircleIcon className="h-4 w-4" />
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleStatusUpdate(rating.id, 'rejected')}
-                        className="flex items-center gap-1 text-red-600 hover:text-red-900 text-sm px-3 py-1 rounded hover:bg-red-50 transition-colors"
-                      >
-                        <XCircleIcon className="h-4 w-4" />
-                        Reject
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))
-        )}
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2">
-          <button
-            onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={!pagination.hasPrev}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-          >
-            Previous
-          </button>
-          <span className="px-3 py-2 text-sm text-gray-600">
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={!pagination.hasNext}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-          >
-            Next
-          </button>
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-100 to-purple-100 px-6 py-4">
+            <div className="flex justify-center items-center gap-4">
+              <button
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={!pagination.hasPrev}
+                className="px-4 py-2 text-sm text-indigo-600 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg hover:from-indigo-100 hover:to-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 backdrop-blur-sm"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-2">
+                <span className="px-4 py-2 text-sm text-indigo-600 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg">
+                  Page <span className="font-semibold text-indigo-800">{pagination.currentPage}</span> of <span className="font-semibold text-indigo-800">{pagination.totalPages}</span>
+                </span>
+              </div>
+              <button
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={!pagination.hasNext}
+                className="px-4 py-2 text-sm text-indigo-600 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg hover:from-indigo-100 hover:to-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 backdrop-blur-sm"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Detail Modal */}
       {showDetailModal && selectedRating && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Rating Details</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl max-w-2xl w-full max-h-[95vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 rounded-t-2xl">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30">
+                    <StarIcon className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Rating Details</h2>
+                    <p className="text-indigo-100 text-sm">Complete rating information and management</p>
+                  </div>
+                </div>
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
                 >
                   <XCircleIcon className="h-6 w-6" />
                 </button>
               </div>
+            </div>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Patient</label>
-                    <p className="text-gray-900">
+            <div className="p-6">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4">
+                    <label className="text-sm font-medium text-indigo-700 block mb-2">Patient</label>
+                    <p className="text-gray-900 font-medium">
                       {selectedRating.isAnonymous ? 'Anonymous Patient' : 
                        `${selectedRating.patient.user.firstName} ${selectedRating.patient.user.lastName}`}
                     </p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Doctor</label>
-                    <p className="text-gray-900">
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4">
+                    <label className="text-sm font-medium text-indigo-700 block mb-2">Doctor</label>
+                    <p className="text-gray-900 font-medium">
                       Dr. {selectedRating.appointment.doctor.user.firstName} {selectedRating.appointment.doctor.user.lastName}
                     </p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Appointment Date</label>
-                    <p className="text-gray-900">
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4">
+                    <label className="text-sm font-medium text-indigo-700 block mb-2">Appointment Date</label>
+                    <p className="text-gray-900 font-medium">
                       {new Date(selectedRating.appointment.appointmentDate).toLocaleDateString()} at {selectedRating.appointment.appointmentTime}
                     </p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Rating</label>
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4">
+                    <label className="text-sm font-medium text-indigo-700 block mb-2">Rating</label>
                     <div className="flex items-center gap-2">
                       {renderStars(selectedRating.rating)}
-                      <span className="text-gray-900">({selectedRating.rating}/5)</span>
+                      <span className="text-gray-900 font-medium">({selectedRating.rating}/5)</span>
                     </div>
                   </div>
                 </div>
 
                 {selectedRating.review && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Review</label>
-                    <p className="text-gray-900 mt-1">{selectedRating.review}</p>
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6">
+                    <label className="text-sm font-medium text-indigo-700 block mb-3">Patient Review</label>
+                    <p className="text-gray-900 leading-relaxed">{selectedRating.review}</p>
                   </div>
                 )}
 
                 {selectedRating.feedback && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Feedback</label>
-                    <p className="text-gray-900 mt-1">{selectedRating.feedback}</p>
+                  <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-6">
+                    <label className="text-sm font-medium text-emerald-700 block mb-3">Admin Feedback</label>
+                    <p className="text-gray-900 leading-relaxed">{selectedRating.feedback}</p>
                   </div>
                 )}
 
-                <div className="flex justify-end gap-3 pt-4">
+                <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
                   {selectedRating.status === 'pending' && (
                     <>
                       <button
@@ -418,7 +449,7 @@ const AdminRatings: React.FC = () => {
                           handleStatusUpdate(selectedRating.id, 'approved');
                           setShowDetailModal(false);
                         }}
-                        className="btn-secondary flex items-center gap-2"
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg hover:from-emerald-700 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-xl"
                       >
                         <CheckCircleIcon className="h-4 w-4" />
                         Approve
@@ -428,7 +459,7 @@ const AdminRatings: React.FC = () => {
                           handleStatusUpdate(selectedRating.id, 'rejected');
                           setShowDetailModal(false);
                         }}
-                        className="btn-outline flex items-center gap-2"
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg hover:from-rose-700 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl"
                       >
                         <XCircleIcon className="h-4 w-4" />
                         Reject
@@ -437,7 +468,7 @@ const AdminRatings: React.FC = () => {
                   )}
                   <button
                     onClick={() => setShowDetailModal(false)}
-                    className="btn-primary"
+                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
                   >
                     Close
                   </button>

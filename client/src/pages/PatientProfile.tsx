@@ -3,7 +3,18 @@ import { useAuth } from '../context/AuthContext';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { ChevronDownIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { 
+  ChevronDownIcon, 
+  PlusIcon, 
+  XMarkIcon,
+  UserIcon,
+  HeartIcon,
+  ShieldCheckIcon,
+  PhoneIcon,
+  HomeIcon,
+  CalendarIcon,
+  IdentificationIcon
+} from '@heroicons/react/24/outline';
 
 
 // Comprehensive list of common allergies
@@ -196,64 +207,108 @@ const PatientProfile: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="page-header">Patient Profile</h1>
-        <p className="text-gray-600">Manage your personal information and medical details.</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="space-y-8 p-6">
+        {/* Modern Header */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold tracking-tight mb-2 flex items-center">
+                  <UserIcon className="h-10 w-10 mr-3" />
+                  Patient Profile
+                </h1>
+                <p className="text-indigo-100 text-lg">
+                  Manage your personal information and medical details.
+                </p>
+              </div>
+              <div className="hidden md:block">
+                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                  <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center">
+                    <HeartIcon className="h-8 w-8 text-white" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Information */}
-        <div className="lg:col-span-2">
-          <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Information */}
+          <div className="lg:col-span-2">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                  <IdentificationIcon className="h-6 w-6 mr-2 text-indigo-600" />
+                  Personal Information
+                </h3>
+                {!isEditingProfile && (
+                  <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">👤</span>
+                  </div>
+                )}
+              </div>
             {isEditingProfile ? (
-              <form onSubmit={profileForm.handleSubmit(onSubmitProfile)}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">First Name</label>
+              <form onSubmit={profileForm.handleSubmit(onSubmitProfile)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">First Name</label>
                     <input
                       {...profileForm.register('firstName')}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                      placeholder="Enter your first name"
                     />
                     {profileForm.formState.errors.firstName && (
-                      <p className="mt-1 text-sm text-red-600">{profileForm.formState.errors.firstName.message}</p>
+                      <p className="text-sm text-red-500">{profileForm.formState.errors.firstName.message}</p>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">Last Name</label>
                     <input
                       {...profileForm.register('lastName')}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                      placeholder="Enter your last name"
                     />
                     {profileForm.formState.errors.lastName && (
-                      <p className="mt-1 text-sm text-red-600">{profileForm.formState.errors.lastName.message}</p>
+                      <p className="text-sm text-red-500">{profileForm.formState.errors.lastName.message}</p>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Email</label>
-                    <p className="mt-1 text-sm text-gray-500">{user?.email} (Cannot be changed)</p>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">Email</label>
+                    <div className="px-4 py-3 bg-gray-100 rounded-xl text-gray-600">
+                      {user?.email} (Cannot be changed)
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Phone</label>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                      <PhoneIcon className="h-4 w-4 mr-1 text-indigo-600" />
+                      Phone
+                    </label>
                     <input
                       {...profileForm.register('phone')}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                      placeholder="Enter your phone number"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                      <CalendarIcon className="h-4 w-4 mr-1 text-indigo-600" />
+                      Date of Birth
+                    </label>
                     <input
                       {...profileForm.register('dateOfBirth')}
                       type="date"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Gender</label>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">Gender</label>
                     <select
                       {...profileForm.register('gender')}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
                     >
                       <option value="">Select Gender</option>
                       <option value="male">Male</option>
@@ -262,294 +317,354 @@ const PatientProfile: React.FC = () => {
                     </select>
                   </div>
                 </div>
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700">Address</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                    <HomeIcon className="h-4 w-4 mr-1 text-indigo-600" />
+                    Address
+                  </label>
                   <textarea
                     {...profileForm.register('address')}
                     rows={3}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm resize-none"
+                    placeholder="Enter your address"
                   />
                 </div>
-                <div className="mt-6 flex gap-3">
+                <div className="flex gap-4 pt-4">
                   <button 
                     type="submit" 
                     disabled={isLoading}
-                    className="btn-primary"
+                    className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
                     {isLoading ? 'Saving...' : 'Save Changes'}
                   </button>
                   <button 
                     type="button"
                     onClick={() => setIsEditingProfile(false)}
-                    className="btn-outline"
+                    className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 hover:scale-105"
                   >
                     Cancel
                   </button>
                 </div>
               </form>
             ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">First Name</label>
-                    <p className="mt-1 text-sm text-gray-900">{user?.firstName}</p>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200/50">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
+                    <p className="text-lg font-medium text-gray-900">{user?.firstName}</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Last Name</label>
-                    <p className="mt-1 text-sm text-gray-900">{user?.lastName}</p>
+                  <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-200/50">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
+                    <p className="text-lg font-medium text-gray-900">{user?.lastName}</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Email</label>
-                    <p className="mt-1 text-sm text-gray-900">{user?.email}</p>
+                  <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl p-4 border border-purple-200/50">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                    <p className="text-lg font-medium text-gray-900">{user?.email}</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Phone</label>
-                    <p className="mt-1 text-sm text-gray-900">{user?.phone || 'Not provided'}</p>
+                  <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-4 border border-amber-200/50">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                      <PhoneIcon className="h-4 w-4 mr-1 text-amber-600" />
+                      Phone
+                    </label>
+                    <p className="text-lg font-medium text-gray-900">{user?.phone || 'Not provided'}</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
-                    <p className="mt-1 text-sm text-gray-900">{user?.dateOfBirth || 'Not provided'}</p>
+                  <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-xl p-4 border border-rose-200/50">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                      <CalendarIcon className="h-4 w-4 mr-1 text-rose-600" />
+                      Date of Birth
+                    </label>
+                    <p className="text-lg font-medium text-gray-900">{user?.dateOfBirth || 'Not provided'}</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Gender</label>
-                    <p className="mt-1 text-sm text-gray-900 capitalize">{user?.gender || 'Not provided'}</p>
+                  <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-4 border border-teal-200/50">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
+                    <p className="text-lg font-medium text-gray-900 capitalize">{user?.gender || 'Not provided'}</p>
                   </div>
                 </div>
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700">Address</label>
-                  <p className="mt-1 text-sm text-gray-900">{user?.address || 'Not provided'}</p>
+                <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200/50">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                    <HomeIcon className="h-4 w-4 mr-1 text-gray-600" />
+                    Address
+                  </label>
+                  <p className="text-lg font-medium text-gray-900">{user?.address || 'Not provided'}</p>
                 </div>
-                <div className="mt-6">
+                <div className="pt-4">
                   <button 
                     onClick={() => setIsEditingProfile(true)}
-                    className="btn-primary"
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
                   >
                     Edit Profile
                   </button>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
 
         {/* Medical Information */}
         <div>
-          <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Medical Information</h3>
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                <HeartIcon className="h-6 w-6 mr-2 text-rose-600" />
+                Medical Information
+              </h3>
+              {!isEditingMedical && (
+                <div className="w-8 h-8 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">❤️</span>
+                </div>
+              )}
+            </div>
             {isEditingMedical ? (
-              <form onSubmit={medicalForm.handleSubmit(onSubmitMedical)}>
+              <form onSubmit={medicalForm.handleSubmit(onSubmitMedical)} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                    <HeartIcon className="h-4 w-4 mr-1 text-rose-600" />
+                    Blood Type
+                  </label>
+                  <select
+                    {...medicalForm.register('bloodType')}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                  >
+                    <option value="">Select Blood Type</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                  </select>
+                </div>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Blood Type</label>
-                    <select
-                      {...medicalForm.register('bloodType')}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    >
-                      <option value="">Select Blood Type</option>
-                      <option value="A+">A+</option>
-                      <option value="A-">A-</option>
-                      <option value="B+">B+</option>
-                      <option value="B-">B-</option>
-                      <option value="AB+">AB+</option>
-                      <option value="AB-">AB-</option>
-                      <option value="O+">O+</option>
-                      <option value="O-">O-</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Allergies</label>
-                    
-                    {/* Selected Allergies Display */}
-                    {selectedAllergies.length > 0 && (
-                      <div className="mt-1 flex flex-wrap gap-2 mb-3">
-                        {selectedAllergies.map((allergy) => (
-                          <span
-                            key={allergy}
-                            className="inline-flex items-center gap-1 px-2 py-1 bg-primary-100 text-primary-800 text-xs rounded-full"
+                  <label className="block text-sm font-semibold text-gray-700">Allergies</label>
+                  
+                  {/* Selected Allergies Display */}
+                  {selectedAllergies.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {selectedAllergies.map((allergy) => (
+                        <span
+                          key={allergy}
+                          className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 text-sm rounded-full border border-amber-200 shadow-sm"
+                        >
+                          {allergy}
+                          <button
+                            type="button"
+                            onClick={() => removeAllergy(allergy)}
+                            className="text-amber-600 hover:text-amber-800 transition-colors duration-200"
                           >
-                            {allergy}
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Allergy Search Dropdown */}
+                  <div className="relative" ref={dropdownRef}>
+                    <div className="flex">
+                      <input
+                        type="text"
+                        value={allergySearch}
+                        onChange={(e) => setAllergySearch(e.target.value)}
+                        onFocus={() => setShowAllergyDropdown(true)}
+                        placeholder="Search or select allergies..."
+                        className="flex-1 px-4 py-3 border border-gray-200 rounded-l-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowAllergyDropdown(!showAllergyDropdown)}
+                        className="px-4 py-3 border border-l-0 border-gray-200 rounded-r-xl bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                      >
+                        <ChevronDownIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+
+                    {showAllergyDropdown && (
+                      <div className="absolute z-10 mt-2 w-full bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                        {filteredAllergies.length > 0 ? (
+                          filteredAllergies.map((allergy) => (
                             <button
+                              key={allergy}
                               type="button"
-                              onClick={() => removeAllergy(allergy)}
-                              className="text-primary-600 hover:text-primary-800"
+                              onClick={() => {
+                                addAllergy(allergy);
+                                setShowAllergyDropdown(false);
+                              }}
+                              className="w-full text-left px-4 py-3 text-sm hover:bg-amber-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
                             >
-                              <XMarkIcon className="h-3 w-3" />
+                              {allergy}
                             </button>
-                          </span>
-                        ))}
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-sm text-gray-500">
+                            No matching allergies found
+                          </div>
+                        )}
                       </div>
                     )}
+                  </div>
 
-                    {/* Allergy Search Dropdown */}
-                    <div className="relative" ref={dropdownRef}>
-                      <div className="flex">
-                        <input
-                          type="text"
-                          value={allergySearch}
-                          onChange={(e) => setAllergySearch(e.target.value)}
-                          onFocus={() => setShowAllergyDropdown(true)}
-                          placeholder="Search or select allergies..."
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowAllergyDropdown(!showAllergyDropdown)}
-                          className="px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 hover:bg-gray-100"
-                        >
-                          <ChevronDownIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-
-                      {showAllergyDropdown && (
-                        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                          {filteredAllergies.length > 0 ? (
-                            filteredAllergies.map((allergy) => (
-                              <button
-                                key={allergy}
-                                type="button"
-                                onClick={() => {
-                                  addAllergy(allergy);
-                                  setShowAllergyDropdown(false);
-                                }}
-                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 border-b border-gray-100"
-                              >
-                                {allergy}
-                              </button>
-                            ))
-                          ) : (
-                            <div className="px-3 py-2 text-sm text-gray-500">
-                              No matching allergies found
-                            </div>
-                          )}
-                        </div>
-                      )}
+                  {/* Custom Allergy Input */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-semibold text-gray-700">Add Custom Allergy</div>
+                    <div className="flex">
+                      <input
+                        type="text"
+                        value={customAllergy}
+                        onChange={(e) => {
+                          setCustomAllergy(e.target.value);
+                          medicalForm.setValue('customAllergies', e.target.value);
+                        }}
+                        placeholder="Enter custom allergy name..."
+                        className="flex-1 px-4 py-3 border border-gray-200 rounded-l-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={addCustomAllergy}
+                        disabled={!customAllergy.trim()}
+                        className="px-4 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-r-xl hover:from-amber-600 hover:to-yellow-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
+                      >
+                        <PlusIcon className="h-5 w-5" />
+                      </button>
                     </div>
-
-                    {/* Custom Allergy Input */}
-                    <div className="mt-3">
-                      <div className="text-sm font-medium text-gray-700 mb-1">Add Custom Allergy</div>
-                      <div className="flex">
-                        <input
-                          type="text"
-                          value={customAllergy}
-                          onChange={(e) => {
-                            setCustomAllergy(e.target.value);
-                            medicalForm.setValue('customAllergies', e.target.value);
-                          }}
-                          placeholder="Enter custom allergy name..."
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={addCustomAllergy}
-                          disabled={!customAllergy.trim()}
-                          className="px-3 py-2 bg-primary-600 text-white rounded-r-md hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        >
-                          <PlusIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Emergency Contact Name</label>
-                    <input
-                      {...medicalForm.register('emergencyContact')}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      placeholder="Emergency contact full name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Emergency Contact Phone</label>
-                    <input
-                      {...medicalForm.register('emergencyPhone')}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      placeholder="Emergency contact phone number"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Insurance Provider</label>
-                    <input
-                      {...medicalForm.register('insuranceProvider')}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      placeholder="Insurance company name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Insurance Number</label>
-                    <input
-                      {...medicalForm.register('insuranceNumber')}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      placeholder="Insurance policy number"
-                    />
                   </div>
                 </div>
-                <div className="mt-6 flex gap-3">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                    <PhoneIcon className="h-4 w-4 mr-1 text-emerald-600" />
+                    Emergency Contact Name
+                  </label>
+                  <input
+                    {...medicalForm.register('emergencyContact')}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                    placeholder="Emergency contact full name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                    <PhoneIcon className="h-4 w-4 mr-1 text-emerald-600" />
+                    Emergency Contact Phone
+                  </label>
+                  <input
+                    {...medicalForm.register('emergencyPhone')}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                    placeholder="Emergency contact phone number"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                    <ShieldCheckIcon className="h-4 w-4 mr-1 text-purple-600" />
+                    Insurance Provider
+                  </label>
+                  <input
+                    {...medicalForm.register('insuranceProvider')}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                    placeholder="Insurance company name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                    <ShieldCheckIcon className="h-4 w-4 mr-1 text-purple-600" />
+                    Insurance Number
+                  </label>
+                  <input
+                    {...medicalForm.register('insuranceNumber')}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                    placeholder="Insurance policy number"
+                  />
+                </div>
+                <div className="flex gap-4 pt-4">
                   <button 
                     type="submit" 
                     disabled={isLoading}
-                    className="flex-1 btn-primary"
+                    className="flex-1 bg-gradient-to-r from-rose-600 to-pink-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-rose-700 hover:to-pink-700 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
                     {isLoading ? 'Saving...' : 'Save Medical Info'}
                   </button>
                   <button 
                     type="button"
                     onClick={() => setIsEditingMedical(false)}
-                    className="btn-outline"
+                    className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 hover:scale-105"
                   >
                     Cancel
                   </button>
                 </div>
               </form>
             ) : (
-              <>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Blood Type</label>
-                    <p className="mt-1 text-sm text-gray-900">{patientData.bloodType || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Allergies</label>
-                    {selectedAllergies.length > 0 ? (
-                      <div className="mt-1 flex flex-wrap gap-2">
-                        {selectedAllergies.map((allergy) => (
-                          <span
-                            key={allergy}
-                            className="inline-flex items-center px-2 py-1 bg-primary-100 text-primary-800 text-xs rounded-full"
-                          >
-                            {allergy}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="mt-1 text-sm text-gray-900">None reported</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Emergency Contact</label>
-                    <div className="mt-1 text-sm text-gray-900">
-                      <p><strong>Name:</strong> {patientData.emergencyContact || 'Not provided'}</p>
-                      <p><strong>Phone:</strong> {patientData.emergencyPhone || 'Not provided'}</p>
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-xl p-4 border border-rose-200/50">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                    <HeartIcon className="h-4 w-4 mr-1 text-rose-600" />
+                    Blood Type
+                  </label>
+                  <p className="text-lg font-medium text-gray-900">{patientData.bloodType || 'Not provided'}</p>
+                </div>
+                
+                <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-4 border border-amber-200/50">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Allergies</label>
+                  {selectedAllergies.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedAllergies.map((allergy) => (
+                        <span
+                          key={allergy}
+                          className="inline-flex items-center px-3 py-2 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 text-sm rounded-full border border-amber-200 shadow-sm"
+                        >
+                          {allergy}
+                        </span>
+                      ))}
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Insurance Information</label>
-                    <div className="mt-1 text-sm text-gray-900">
-                      <p><strong>Provider:</strong> {patientData.insuranceProvider || 'Not provided'}</p>
-                      <p><strong>Policy Number:</strong> {patientData.insuranceNumber || 'Not provided'}</p>
+                  ) : (
+                    <p className="text-lg font-medium text-gray-900">None reported</p>
+                  )}
+                </div>
+                
+                <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-200/50">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                    <PhoneIcon className="h-4 w-4 mr-1 text-emerald-600" />
+                    Emergency Contact
+                  </label>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">Name:</span>
+                      <p className="text-lg font-medium text-gray-900">{patientData.emergencyContact || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">Phone:</span>
+                      <p className="text-lg font-medium text-gray-900">{patientData.emergencyPhone || 'Not provided'}</p>
                     </div>
                   </div>
                 </div>
-                <div className="mt-6">
+                
+                <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl p-4 border border-purple-200/50">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                    <ShieldCheckIcon className="h-4 w-4 mr-1 text-purple-600" />
+                    Insurance Information
+                  </label>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">Provider:</span>
+                      <p className="text-lg font-medium text-gray-900">{patientData.insuranceProvider || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">Policy Number:</span>
+                      <p className="text-lg font-medium text-gray-900">{patientData.insuranceNumber || 'Not provided'}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pt-4">
                   <button 
                     onClick={() => setIsEditingMedical(true)}
-                    className="btn-primary w-full"
+                    className="w-full bg-gradient-to-r from-rose-600 to-pink-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-rose-700 hover:to-pink-700 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
                   >
                     Update Medical Info
                   </button>
                 </div>
-              </>
+              </div>
             )}
           </div>
+        </div>
         </div>
       </div>
     </div>

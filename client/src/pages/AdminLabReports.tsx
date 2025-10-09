@@ -121,6 +121,7 @@ const AdminLabReports: React.FC = () => {
   const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
   const [testTypeFilter, setTestTypeFilter] = useState<'all' | 'prescribed' | 'ordered'>('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Prescription lab test management states
   const [selectedPrescriptionTest, setSelectedPrescriptionTest] = useState<PrescriptionLabTest | null>(null);
@@ -299,12 +300,13 @@ const AdminLabReports: React.FC = () => {
 
   // Fetch prescription lab tests for admin
   const { data: prescriptionLabTestsData, isLoading: prescriptionTestsLoading } = useQuery({
-    queryKey: ['admin-prescription-lab-tests', activeSearchTerm, dateFrom, dateTo, page],
+    queryKey: ['admin-prescription-lab-tests', statusFilter, activeSearchTerm, dateFrom, dateTo, page],
     queryFn: async () => {
-      console.log('🔍 Fetching admin prescription lab tests with params:', { activeSearchTerm, dateFrom, dateTo, page });
+      console.log('🔍 Fetching admin prescription lab tests with params:', { statusFilter, activeSearchTerm, dateFrom, dateTo, page });
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
+        ...(statusFilter && { status: statusFilter }),
         ...(activeSearchTerm && { search: activeSearchTerm }),
         ...(dateFrom && { dateFrom }),
         ...(dateTo && { dateTo }),
@@ -1235,18 +1237,41 @@ const AdminLabReports: React.FC = () => {
   };
 
   // Manual refresh function for testing
-  const handleManualRefresh = () => {
+  const handleManualRefresh = async () => {
+    if (isRefreshing) return; // Prevent multiple simultaneous refreshes
+    
     console.log('🔄 Manual refresh triggered');
-    queryClient.invalidateQueries({ queryKey: ['admin-lab-orders'] });
-    queryClient.invalidateQueries({ 
-      queryKey: ['admin-prescription-lab-tests'],
-      exact: false 
-    });
-    queryClient.refetchQueries({ queryKey: ['admin-lab-orders'] });
-    queryClient.refetchQueries({ 
-      queryKey: ['admin-prescription-lab-tests'],
-      exact: false 
-    });
+    setIsRefreshing(true);
+    
+    try {
+      // Invalidate all admin queries with partial matching
+      await queryClient.invalidateQueries({ 
+        queryKey: ['admin-lab-orders'],
+        exact: false 
+      });
+      await queryClient.invalidateQueries({ 
+        queryKey: ['admin-prescription-lab-tests'],
+        exact: false 
+      });
+      
+      // Force refetch all admin queries
+      await queryClient.refetchQueries({ 
+        queryKey: ['admin-lab-orders'],
+        exact: false 
+      });
+      await queryClient.refetchQueries({ 
+        queryKey: ['admin-prescription-lab-tests'],
+        exact: false 
+      });
+      
+      console.log('✅ Manual refresh completed');
+      toast.success('Data refreshed successfully');
+    } catch (error) {
+      console.error('❌ Manual refresh failed:', error);
+      toast.error('Failed to refresh data');
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   // Expose handler functions to window for debugging
@@ -1489,9 +1514,24 @@ const AdminLabReports: React.FC = () => {
           </div>
           <button
             onClick={handleManualRefresh}
-            className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+            disabled={isRefreshing}
+            className={`px-3 py-1 text-white rounded-md text-sm flex items-center space-x-2 ${
+              isRefreshing 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
-            🔄 Refresh Data
+            {isRefreshing ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Refreshing...</span>
+              </>
+            ) : (
+              <>
+                <span>🔄</span>
+                <span>Refresh Data</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -1525,11 +1565,21 @@ const AdminLabReports: React.FC = () => {
               >
                 <option value="">All Status</option>
                 <option value="ordered">Ordered</option>
+                <option value="verified">Verified</option>
                 <option value="approved">Approved</option>
+                <option value="payment_pending">Payment Pending</option>
+                <option value="payment_partial">Payment Partial</option>
+                <option value="payment_completed">Payment Completed</option>
+                <option value="sample_collection_scheduled">Sample Collection Scheduled</option>
+                <option value="sample_collected">Sample Collected</option>
                 <option value="sample_processing">Sample Processing</option>
                 <option value="sample_taken">Sample Taken</option>
+                <option value="processing">Processing</option>
                 <option value="reported">Reported</option>
+                <option value="results_ready">Results Ready</option>
                 <option value="confirmed">Confirmed</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
               </select>
             </div>
           

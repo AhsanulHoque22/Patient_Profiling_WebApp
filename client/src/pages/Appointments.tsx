@@ -3,7 +3,20 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { CalendarIcon, ClockIcon, UserIcon, PlusIcon, DocumentTextIcon, StarIcon, VideoCameraIcon } from '@heroicons/react/24/outline';
+import { 
+  CalendarIcon, 
+  ClockIcon, 
+  UserIcon, 
+  PlusIcon, 
+  DocumentTextIcon, 
+  StarIcon, 
+  VideoCameraIcon,
+  FunnelIcon,
+  XMarkIcon,
+  EyeIcon,
+  XCircleIcon,
+  CheckCircleIcon
+} from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import PrescriptionView from '../components/PrescriptionView';
 import RatingModal from '../components/RatingModal';
@@ -294,241 +307,318 @@ const Appointments: React.FC = () => {
   }, [searchParams]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="page-header">Appointments</h1>
-        <p className="text-gray-600">Manage your appointments and schedule new ones.</p>
-      </div>
-
-      <div className="card">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">My Appointments</h3>
-          <button 
-            onClick={() => {
-              setShowBookingModal(true);
-              fetchDoctors();
-            }}
-            className="btn-primary flex items-center gap-2"
-          >
-            <PlusIcon className="h-4 w-4" />
-            Book New Appointment
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="space-y-8 p-6">
+        {/* Modern Header */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold tracking-tight mb-2 flex items-center">
+                  <CalendarIcon className="h-10 w-10 mr-3" />
+                  Appointments
+                </h1>
+                <p className="text-indigo-100 text-lg">
+                  Manage your appointments and schedule new ones.
+                </p>
+              </div>
+              <div className="hidden md:block">
+                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                  <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center">
+                    <ClockIcon className="h-8 w-8 text-white" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
         </div>
 
-        {/* Filters */}
-        <div className="mb-4 space-y-3">
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Doctor:</label>
-              <select
-                value={doctorFilter}
-                onChange={(e) => {
-                  console.log('Doctor filter changed:', e.target.value);
-                  setDoctorFilter(e.target.value);
-                }}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm min-w-[200px]"
-              >
-                <option value="all">All Doctors</option>
-                {uniqueDoctors.map((doctor: any) => (
-                  <option key={doctor.id} value={doctor.id}>
-                    {doctor.name} {doctor.department && `(${getDepartmentLabel(doctor.department)})`}
-                  </option>
+        {/* Main Appointments Section */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                <DocumentTextIcon className="h-6 w-6 mr-2 text-indigo-600" />
+                My Appointments
+              </h3>
+              <div className="ml-4 w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-bold">📅</span>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                setShowBookingModal(true);
+                fetchDoctors();
+              }}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2"
+            >
+              <PlusIcon className="h-5 w-5" />
+              Book New Appointment
+            </button>
+          </div>
+
+          {/* Modern Filters */}
+          <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200/50 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <FunnelIcon className="h-5 w-5 text-indigo-600 mr-2" />
+                <h4 className="text-lg font-semibold text-gray-900">Filters</h4>
+              </div>
+              {(statusFilter !== 'all' || typeFilter !== 'all' || doctorFilter !== 'all') && (
+                <button
+                  onClick={() => {
+                    setStatusFilter('all');
+                    setTypeFilter('all');
+                    setDoctorFilter('all');
+                  }}
+                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-indigo-50 transition-colors duration-200"
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                  Clear Filters
+                </button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                  <UserIcon className="h-4 w-4 mr-1 text-indigo-600" />
+                  Doctor
+                </label>
+                <select
+                  value={doctorFilter}
+                  onChange={(e) => {
+                    console.log('Doctor filter changed:', e.target.value);
+                    setDoctorFilter(e.target.value);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                >
+                  <option value="all">All Doctors</option>
+                  {uniqueDoctors.map((doctor: any) => (
+                    <option key={doctor.id} value={doctor.id}>
+                      {doctor.name} {doctor.department && `(${getDepartmentLabel(doctor.department)})`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                  <CheckCircleIcon className="h-4 w-4 mr-1 text-emerald-600" />
+                  Status
+                </label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    console.log('Status filter changed:', e.target.value);
+                    setStatusFilter(e.target.value);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                >
+                  <option value="all">All Status</option>
+                  <option value="requested">Requested</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                  <CalendarIcon className="h-4 w-4 mr-1 text-purple-600" />
+                  Type
+                </label>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => {
+                    console.log('Type filter changed:', e.target.value);
+                    setTypeFilter(e.target.value);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                >
+                  <option value="all">All Types</option>
+                  <option value="in_person">In Person</option>
+                  <option value="telemedicine">Telemedicine</option>
+                  <option value="follow_up">Follow Up</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="text-sm text-gray-600 bg-white/50 rounded-lg px-4 py-2 border border-gray-200/50">
+              Showing <span className="font-semibold text-indigo-600">{appointments.length}</span> appointment{appointments.length !== 1 ? 's' : ''}
+              {(statusFilter !== 'all' || typeFilter !== 'all' || doctorFilter !== 'all') && (
+                <span className="text-amber-600 ml-1">(filtered)</span>
+              )}
+            </div>
+          </div>
+        
+          {/* Modern Appointments List */}
+          <div className="space-y-4">
+            {appointments.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-24 h-24 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CalendarIcon className="h-12 w-12 text-indigo-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No appointments scheduled</h3>
+                <p className="text-gray-600 mb-6">Book your first appointment today!</p>
+                <button 
+                  onClick={() => {
+                    setShowBookingModal(true);
+                    fetchDoctors();
+                  }}
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto"
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  Book Appointment
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {appointments.map((appointment: any) => (
+                  <div key={appointment.id} className="bg-gradient-to-r from-white to-blue-50 rounded-xl p-6 border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-4 mb-3">
+                          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg p-3 text-white">
+                            <CalendarIcon className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">
+                              {new Date(appointment.appointmentDate).toLocaleDateString()}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              Serial #{appointment.serialNumber} • {appointment.appointmentTime}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="flex items-center gap-2">
+                            <UserIcon className="h-4 w-4 text-indigo-600" />
+                            <span className="text-sm font-medium text-gray-700">Doctor:</span>
+                            <span className="text-sm text-gray-900">
+                              Dr. {appointment.doctor?.user?.firstName} {appointment.doctor?.user?.lastName}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <DocumentTextIcon className="h-4 w-4 text-purple-600" />
+                            <span className="text-sm font-medium text-gray-700">Type:</span>
+                            <span className="text-sm text-gray-900 capitalize">
+                              {appointment.type.replace('_', ' ')}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                              appointment.status === 'requested' ? 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200' :
+                              appointment.status === 'scheduled' ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200' :
+                              appointment.status === 'confirmed' ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200' :
+                              appointment.status === 'in_progress' ? 'bg-gradient-to-r from-purple-100 to-violet-100 text-purple-800 border border-purple-200' :
+                              appointment.status === 'completed' ? 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border border-gray-200' :
+                              appointment.status === 'cancelled' ? 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200' :
+                              'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border border-gray-200'
+                            }`}>
+                              {appointment.status === 'in_progress' ? 'In Progress' : 
+                               appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-2">
+                        <button 
+                          onClick={() => handleViewAppointment(appointment)}
+                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                          View
+                        </button>
+                        
+                        {appointment.status === 'completed' && (
+                          <button 
+                            onClick={() => handleRateAppointment(appointment)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
+                              appointmentRatings[appointment.id] 
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600' 
+                                : 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white hover:from-amber-600 hover:to-yellow-600'
+                            }`}
+                          >
+                            <StarIcon className="h-4 w-4" />
+                            {appointmentRatings[appointment.id] ? (
+                              <span>Rated ({appointmentRatings[appointment.id]}/5)</span>
+                            ) : (
+                              'Rate'
+                            )}
+                          </button>
+                        )}
+                        
+                        {appointment.type === 'telemedicine' && (appointment.status === 'confirmed' || appointment.status === 'in_progress') && (
+                          <button 
+                            onClick={() => handleVideoCall(appointment)}
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
+                          >
+                            <VideoCameraIcon className="h-4 w-4" />
+                            Enter Room
+                          </button>
+                        )}
+                        
+                        {(appointment.status === 'scheduled' || appointment.status === 'confirmed') && (
+                          <button 
+                            onClick={() => handleCancelAppointment(appointment.id)}
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg hover:from-red-600 hover:to-rose-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
+                          >
+                            <XCircleIcon className="h-4 w-4" />
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Status:</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  console.log('Status filter changed:', e.target.value);
-                  setStatusFilter(e.target.value);
-                }}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm"
-              >
-                <option value="all">All Status</option>
-                <option value="requested">Requested</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Type:</label>
-              <select
-                value={typeFilter}
-                onChange={(e) => {
-                  console.log('Type filter changed:', e.target.value);
-                  setTypeFilter(e.target.value);
-                }}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm"
-              >
-                <option value="all">All Types</option>
-                <option value="in_person">In Person</option>
-                <option value="telemedicine">Telemedicine</option>
-                <option value="follow_up">Follow Up</option>
-              </select>
-            </div>
-
-            {(statusFilter !== 'all' || typeFilter !== 'all' || doctorFilter !== 'all') && (
-              <button
-                onClick={() => {
-                  setStatusFilter('all');
-                  setTypeFilter('all');
-                  setDoctorFilter('all');
-                }}
-                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-              >
-                Clear Filters
-              </button>
+              </div>
             )}
           </div>
-          
-          <div className="text-sm text-gray-600">
-            Showing {appointments.length} appointment{appointments.length !== 1 ? 's' : ''}
-            {(statusFilter !== 'all' || typeFilter !== 'all' || doctorFilter !== 'all') && ' (filtered)'}
-          </div>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date & Time
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Doctor
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {appointments.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                    No appointments scheduled. Book your first appointment today!
-                  </td>
-                </tr>
-              ) : (
-                appointments.map((appointment: any) => (
-                  <tr key={appointment.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div>
-                        <div>{new Date(appointment.appointmentDate).toLocaleDateString()}</div>
-                        <div className="text-gray-500">Serial #{appointment.serialNumber} - {appointment.appointmentTime}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      Dr. {appointment.doctor?.user?.firstName} {appointment.doctor?.user?.lastName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
-                      {appointment.type.replace('_', ' ')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        appointment.status === 'requested' ? 'bg-yellow-100 text-yellow-800' :
-                        appointment.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
-                        appointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                        appointment.status === 'in_progress' ? 'bg-purple-100 text-purple-800' :
-                        appointment.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                        appointment.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {appointment.status === 'in_progress' ? 'In Progress' : 
-                         appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <button 
-                        onClick={() => handleViewAppointment(appointment)}
-                        className="text-primary-600 hover:text-primary-900"
-                      >
-                        View
-                      </button>
-                      {appointment.status === 'completed' && (
-                        <button 
-                          onClick={() => handleRateAppointment(appointment)}
-                          className={`flex items-center gap-1 ${
-                            appointmentRatings[appointment.id] 
-                              ? 'text-green-600 hover:text-green-700' 
-                              : 'text-yellow-600 hover:text-yellow-700'
-                          }`}
-                        >
-                          <StarIcon className="h-4 w-4" />
-                          {appointmentRatings[appointment.id] ? (
-                            <span>Rated ({appointmentRatings[appointment.id]}/5)</span>
-                          ) : (
-                            'Rate'
-                          )}
-                        </button>
-                      )}
-                      {appointment.type === 'telemedicine' && (appointment.status === 'confirmed' || appointment.status === 'in_progress') && (
-                        <button 
-                          onClick={() => handleVideoCall(appointment)}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-700"
-                        >
-                          <VideoCameraIcon className="h-4 w-4" />
-                          Enter Room
-                        </button>
-                      )}
-                      {appointment.status === 'scheduled' || appointment.status === 'confirmed' ? (
-                        <button 
-                          onClick={() => handleCancelAppointment(appointment.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Cancel
-                        </button>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
         </div>
       </div>
 
-      {/* Booking Modal */}
+      {/* Modern Booking Modal */}
       {showBookingModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Book New Appointment</h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-white/50">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                <CalendarIcon className="h-6 w-6 mr-2 text-indigo-600" />
+                Book New Appointment
+              </h2>
               <button 
                 onClick={() => setShowBookingModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-2 hover:bg-gray-100 rounded-full"
               >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); handleBookingSubmit(); }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={(e) => { e.preventDefault(); handleBookingSubmit(); }} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Doctor Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Select Doctor</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                    <UserIcon className="h-4 w-4 mr-1 text-indigo-600" />
+                    Select Doctor
+                  </label>
                   <select
                     value={bookingForm.doctorId}
                     onChange={(e) => {
                       setBookingForm({...bookingForm, doctorId: e.target.value, timeBlock: ''});
                       setAvailableTimeBlocks(getAvailableTimeBlocks(e.target.value));
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
                     required
                   >
                     <option value="">Choose a doctor</option>
@@ -541,8 +631,11 @@ const Appointments: React.FC = () => {
                 </div>
 
                 {/* Appointment Date */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                    <CalendarIcon className="h-4 w-4 mr-1 text-indigo-600" />
+                    Date
+                  </label>
                   <input
                     type="date"
                     value={bookingForm.appointmentDate}
@@ -551,18 +644,21 @@ const Appointments: React.FC = () => {
                       setAvailableTimeBlocks(getAvailableTimeBlocks(bookingForm.doctorId));
                     }}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
                     required
                   />
                 </div>
 
                 {/* Time Block Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Available Chamber Times</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                    <ClockIcon className="h-4 w-4 mr-1 text-indigo-600" />
+                    Available Chamber Times
+                  </label>
                   <select
                     value={bookingForm.timeBlock}
                     onChange={(e) => setBookingForm({...bookingForm, timeBlock: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
                     required
                     disabled={!bookingForm.doctorId || !bookingForm.appointmentDate}
                   >
@@ -578,19 +674,22 @@ const Appointments: React.FC = () => {
                     ))}
                   </select>
                   {bookingForm.doctorId && bookingForm.appointmentDate && availableTimeBlocks.length === 0 && (
-                    <p className="text-sm text-orange-600 mt-1">
+                    <p className="text-sm text-amber-600 mt-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
                       No chamber times available for the selected doctor on this day.
                     </p>
                   )}
                 </div>
 
                 {/* Appointment Type */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Appointment Type</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                    <DocumentTextIcon className="h-4 w-4 mr-1 text-indigo-600" />
+                    Appointment Type
+                  </label>
                   <select
                     value={bookingForm.type}
                     onChange={(e) => setBookingForm({...bookingForm, type: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
                   >
                     <option value="in_person">In-Person</option>
                     <option value="telemedicine">Telemedicine</option>
@@ -600,42 +699,42 @@ const Appointments: React.FC = () => {
               </div>
 
               {/* Reason */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1"> Reason for Visit</label>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">Reason for Visit</label>
                 <input
                   type="text"
                   value={bookingForm.reason}
                   onChange={(e) => setBookingForm({...bookingForm, reason: e.target.value})}
                   placeholder="Brief reason for the appointment"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
                 />
               </div>
 
               {/* Symptoms */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Symptoms</label>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">Symptoms</label>
                 <textarea
                   value={bookingForm.symptoms}
                   onChange={(e) => setBookingForm({...bookingForm, symptoms: e.target.value})}
                   placeholder="Describe any symptoms or concerns"
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm resize-none"
                 />
               </div>
 
               {/* Submit Buttons */}
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex gap-4 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowBookingModal(false)}
-                  className="btn-outline"
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 hover:scale-105"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="btn-primary"
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {isLoading ? 'Booking...' : 'Book Appointment'}
                 </button>
@@ -645,82 +744,87 @@ const Appointments: React.FC = () => {
         </div>
       )}
 
-      {/* View Appointment Modal */}
+      {/* Modern View Appointment Modal */}
       {showViewModal && selectedAppointment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/50">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <EyeIcon className="h-6 w-6 mr-2 text-indigo-600" />
                   Appointment Details
                 </h2>
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-2 hover:bg-gray-100 rounded-full"
                 >
-                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Patient Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Patient Information</h3>
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200/50">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <UserIcon className="h-5 w-5 mr-2 text-blue-600" />
+                    Patient Information
+                  </h3>
                   <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Name</label>
-                      <p className="text-gray-900">
+                    <div className="bg-white/50 rounded-lg p-3">
+                      <label className="text-sm font-medium text-gray-600">Name</label>
+                      <p className="text-gray-900 font-medium">
                         {selectedAppointment.patient?.user?.firstName} {selectedAppointment.patient?.user?.lastName}
                       </p>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Email</label>
-                      <p className="text-gray-900">{selectedAppointment.patient?.user?.email}</p>
+                    <div className="bg-white/50 rounded-lg p-3">
+                      <label className="text-sm font-medium text-gray-600">Email</label>
+                      <p className="text-gray-900 font-medium">{selectedAppointment.patient?.user?.email}</p>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Phone</label>
-                      <p className="text-gray-900">{selectedAppointment.patient?.user?.phone || 'Not provided'}</p>
+                    <div className="bg-white/50 rounded-lg p-3">
+                      <label className="text-sm font-medium text-gray-600">Phone</label>
+                      <p className="text-gray-900 font-medium">{selectedAppointment.patient?.user?.phone || 'Not provided'}</p>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Blood Type</label>
-                      <p className="text-gray-900">{selectedAppointment.patient?.bloodType || 'Not provided'}</p>
+                    <div className="bg-white/50 rounded-lg p-3">
+                      <label className="text-sm font-medium text-gray-600">Blood Type</label>
+                      <p className="text-gray-900 font-medium">{selectedAppointment.patient?.bloodType || 'Not provided'}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Appointment Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Appointment Information</h3>
+                <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-6 border border-emerald-200/50">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <CalendarIcon className="h-5 w-5 mr-2 text-emerald-600" />
+                    Appointment Information
+                  </h3>
                   <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Date</label>
-                      <p className="text-gray-900">
+                    <div className="bg-white/50 rounded-lg p-3">
+                      <label className="text-sm font-medium text-gray-600">Date</label>
+                      <p className="text-gray-900 font-medium">
                         {new Date(selectedAppointment.appointmentDate).toLocaleDateString()}
                       </p>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Time</label>
-                      <p className="text-gray-900">{selectedAppointment.appointmentTime}</p>
+                    <div className="bg-white/50 rounded-lg p-3">
+                      <label className="text-sm font-medium text-gray-600">Time</label>
+                      <p className="text-gray-900 font-medium">{selectedAppointment.appointmentTime}</p>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Serial Number</label>
-                      <p className="text-gray-900">#{selectedAppointment.serialNumber}</p>
+                    <div className="bg-white/50 rounded-lg p-3">
+                      <label className="text-sm font-medium text-gray-600">Serial Number</label>
+                      <p className="text-gray-900 font-medium">#{selectedAppointment.serialNumber}</p>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Type</label>
-                      <p className="text-gray-900 capitalize">{selectedAppointment.type.replace('_', ' ')}</p>
+                    <div className="bg-white/50 rounded-lg p-3">
+                      <label className="text-sm font-medium text-gray-600">Type</label>
+                      <p className="text-gray-900 font-medium capitalize">{selectedAppointment.type.replace('_', ' ')}</p>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Status</label>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        selectedAppointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                        selectedAppointment.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
-                        selectedAppointment.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                        selectedAppointment.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                        selectedAppointment.status === 'in_progress' ? 'bg-purple-100 text-purple-800' :
-                        'bg-yellow-100 text-yellow-800'
+                    <div className="bg-white/50 rounded-lg p-3">
+                      <label className="text-sm font-medium text-gray-600">Status</label>
+                      <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                        selectedAppointment.status === 'confirmed' ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200' :
+                        selectedAppointment.status === 'scheduled' ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200' :
+                        selectedAppointment.status === 'cancelled' ? 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200' :
+                        selectedAppointment.status === 'completed' ? 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border border-gray-200' :
+                        selectedAppointment.status === 'in_progress' ? 'bg-gradient-to-r from-purple-100 to-violet-100 text-purple-800 border border-purple-200' :
+                        'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200'
                       }`}>
                         {selectedAppointment.status === 'in_progress' ? 'In Progress' : 
                          selectedAppointment.status.charAt(0).toUpperCase() + selectedAppointment.status.slice(1)}
@@ -879,7 +983,7 @@ const Appointments: React.FC = () => {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="btn-outline"
+                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 hover:scale-105"
                 >
                   Close
                 </button>

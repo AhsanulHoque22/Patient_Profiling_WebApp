@@ -10,7 +10,9 @@ import {
   ExclamationCircleIcon,
   ChartBarIcon,
   UserIcon,
-  StarIcon
+  StarIcon,
+  EyeIcon,
+  ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 
@@ -119,198 +121,306 @@ const DoctorDashboard: React.FC = () => {
       name: 'Today\'s Appointments',
       value: stats?.todayAppointments || 0,
       icon: CalendarIcon,
-      color: 'bg-blue-500',
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-50',
+      iconColor: 'text-blue-600',
     },
     {
       name: 'Pending Requests',
       value: stats?.requestedAppointments || 0,
       icon: ExclamationCircleIcon,
-      color: 'bg-yellow-500',
+      color: 'from-amber-500 to-amber-600',
+      bgColor: 'bg-amber-50',
+      iconColor: 'text-amber-600',
     },
     {
       name: 'In Progress',
       value: stats?.inProgressAppointments || 0,
       icon: ClockIcon,
-      color: 'bg-purple-500',
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600',
     },
     {
       name: 'Completed Today',
       value: stats?.completedAppointments || 0,
       icon: CheckCircleIcon,
-      color: 'bg-green-500',
+      color: 'from-emerald-500 to-emerald-600',
+      bgColor: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
     },
     {
       name: 'Total Patients',
       value: stats?.totalPatients || 0,
       icon: UserGroupIcon,
-      color: 'bg-indigo-500',
+      color: 'from-indigo-500 to-indigo-600',
+      bgColor: 'bg-indigo-50',
+      iconColor: 'text-indigo-600',
     },
     {
       name: 'Total Appointments',
       value: stats?.totalAppointments || 0,
       icon: ChartBarIcon,
-      color: 'bg-primary-500',
+      color: 'from-rose-500 to-rose-600',
+      bgColor: 'bg-rose-50',
+      iconColor: 'text-rose-600',
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="page-header">Doctor's Dashboard</h1>
-        <p className="text-gray-600">Welcome back, Dr. {user?.firstName} {user?.lastName}</p>
-        {ratingData?.summary && ratingData.summary.totalRatings > 0 && (
-          <div className="mt-2 flex items-center gap-2">
-            <span className="text-sm text-gray-500">Your Overall Rating:</span>
-            <div className="flex items-center gap-1">
-              <StarIcon className="h-4 w-4 text-yellow-400" />
-              <span className="text-sm font-medium text-gray-900">
-                {parseFloat(ratingData.summary.averageRating).toFixed(1)}
-              </span>
-              <span className="text-sm text-gray-500">
-                ({ratingData.summary.totalRatings} reviews)
-              </span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="space-y-8 p-6">
+        {/* Modern Header */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold tracking-tight mb-2">
+                  Welcome back, Dr. {user?.firstName}! 👨‍⚕️
+                </h1>
+                <p className="text-indigo-100 text-lg">
+                  Here's your practice overview and today's schedule.
+                </p>
+                {ratingData?.summary && ratingData.summary.totalRatings > 0 && (
+                  <div className="mt-4 flex items-center gap-3">
+                    <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+                      <StarIcon className="h-5 w-5 text-yellow-300" />
+                      <span className="font-semibold">
+                        {parseFloat(ratingData.summary.averageRating).toFixed(1)}
+                      </span>
+                      <span className="text-indigo-200 text-sm">
+                        ({ratingData.summary.totalRatings} reviews)
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="hidden md:block">
+                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                  <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center">
+                    <UserIcon className="h-8 w-8 text-white" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+        </div>
+
+        {/* Stats Cards */}
+        {statsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg animate-pulse">
+                <div className="h-4 bg-gray-200 rounded-lg w-3/4 mb-4"></div>
+                <div className="h-8 bg-gray-200 rounded-lg w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {statsCards.map((stat, index) => (
+              <div 
+                key={stat.name} 
+                className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50 flex flex-col"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                    <stat.icon className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-600 mb-1">{stat.name}</p>
+                    <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <div className="h-1 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full bg-gradient-to-r ${stat.color} rounded-full transition-all duration-1000 ease-out`}
+                      style={{ width: `${Math.min((stat.value / Math.max(stat.value, 1)) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Today's Schedule */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg p-3 text-white">
+                  <CalendarIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Today's Schedule</h3>
+                  <p className="text-sm text-gray-600">Your appointments for today</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate('/app/appointments')}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md text-sm font-medium"
+              >
+                <EyeIcon className="h-4 w-4" />
+                View All
+              </button>
+            </div>
+            <div className="space-y-4">
+              {!appointments || appointments.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-24 h-24 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CalendarIcon className="h-12 w-12 text-indigo-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No appointments scheduled for today</h3>
+                  <p className="text-gray-600">Enjoy your free time or check upcoming appointments</p>
+                </div>
+              ) : (
+                appointments.slice(0, 5).map((appointment, index) => (
+                  <div 
+                    key={appointment.id} 
+                    className="group bg-gradient-to-r from-white to-blue-50 rounded-xl p-4 border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+                    onClick={() => navigate('/app/appointments')}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                            Serial #{appointment.serialNumber}
+                          </span>
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                            {appointment.appointmentTime}
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-gray-900 text-lg mb-1">
+                          {appointment.patient.user.firstName} {appointment.patient.user.lastName}
+                        </h4>
+                        {appointment.reason && (
+                          <p className="text-sm text-gray-600 bg-white/50 rounded-lg p-2 mt-2">
+                            <span className="font-semibold text-gray-900">Reason:</span> {appointment.reason.length > 60 ? `${appointment.reason.substring(0, 60)}...` : appointment.reason}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                          appointment.status === 'requested' ? 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200' :
+                          appointment.status === 'scheduled' ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200' :
+                          appointment.status === 'in_progress' ? 'bg-gradient-to-r from-purple-100 to-violet-100 text-purple-800 border border-purple-200' :
+                          appointment.status === 'completed' ? 'bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-200' :
+                          'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200'
+                        }`}>
+                          {appointment.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                        <ArrowRightIcon className="h-4 w-4 text-gray-400 group-hover:text-indigo-600 transition-colors duration-200" />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+        </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+            <div className="flex items-center mb-6">
+              <div className="bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg p-3 text-white mr-3">
+                <ArrowRightIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Quick Actions</h3>
+                <p className="text-sm text-gray-600">Manage your practice efficiently</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <button 
+                onClick={() => navigate('/app/doctor-appointments')}
+                className="group w-full text-left p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 hover:scale-[1.02] border border-blue-200/50 hover:shadow-md"
+              >
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                    <CalendarIcon className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-blue-800 font-semibold block">Manage Appointments</span>
+                    <span className="text-blue-600 text-sm">
+                      {stats?.requestedAppointments || 0} pending requests
+                    </span>
+                  </div>
+                  <ArrowRightIcon className="h-5 w-5 text-blue-400 group-hover:text-blue-600 transition-colors duration-200" />
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => navigate('/app/patients')}
+                className="group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 hover:scale-[1.02] border border-emerald-200/50 hover:shadow-md"
+              >
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                    <UserGroupIcon className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-emerald-800 font-semibold block">Patient History</span>
+                    <span className="text-emerald-600 text-sm">
+                      {stats?.totalPatients || 0} total patients
+                    </span>
+                  </div>
+                  <ArrowRightIcon className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600 transition-colors duration-200" />
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => navigate('/app/doctor-profile')}
+                className="group w-full text-left p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl hover:from-purple-100 hover:to-violet-100 transition-all duration-300 hover:scale-[1.02] border border-purple-200/50 hover:shadow-md"
+              >
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                    <UserIcon className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-purple-800 font-semibold block">Update Profile</span>
+                    <span className="text-purple-600 text-sm">Manage your professional information</span>
+                  </div>
+                  <ArrowRightIcon className="h-5 w-5 text-purple-400 group-hover:text-purple-600 transition-colors duration-200" />
+                </div>
+              </button>
+            </div>
+          </div>
+      </div>
+
+        {/* Appointment Requests Summary */}
+        {stats && stats.requestedAppointments > 0 && (
+          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl p-6 shadow-lg border border-amber-200/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-lg p-3 text-white shadow-lg">
+                  <ExclamationCircleIcon className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-amber-900">
+                    {stats.requestedAppointments} Appointment Request{stats.requestedAppointments !== 1 ? 's' : ''} Pending
+                  </h3>
+                  <p className="text-sm text-amber-700 mt-1">
+                    Review and approve appointment requests from patients
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate('/app/doctor-appointments')}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium"
+              >
+                <EyeIcon className="h-5 w-5" />
+                Review Requests
+              </button>
             </div>
           </div>
         )}
       </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {statsCards.map((stat) => (
-          <div key={stat.name} className="card">
-            <div className="flex items-center">
-              <div className={`${stat.color} rounded-lg p-3`}>
-                <stat.icon className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">{stat.name}</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {statsLoading ? '...' : stat.value}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Today's Schedule */}
-        <div className="card">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Today's Schedule</h3>
-            <button 
-              onClick={() => navigate('/doctor-appointments')}
-              className="text-sm text-primary-600 hover:text-primary-800"
-            >
-              View All
-            </button>
-          </div>
-          <div className="space-y-3">
-            {!appointments || appointments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <CalendarIcon className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                <p>No appointments scheduled for today</p>
-              </div>
-            ) : (
-              appointments.slice(0, 5).map((appointment) => (
-                <div 
-                  key={appointment.id} 
-                  className={`border-l-4 ${getStatusColor(appointment.status)} pl-4 py-3 rounded-r cursor-pointer hover:shadow-sm transition-shadow`}
-                  onClick={() => navigate('/doctor-appointments')}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        Serial #{appointment.serialNumber} - {appointment.appointmentTime}
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        {appointment.patient.user.firstName} {appointment.patient.user.lastName}
-                      </p>
-                      {appointment.reason && (
-                        <p className="text-xs text-gray-500 mt-1">{appointment.reason}</p>
-                      )}
-                    </div>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(appointment.status)}`}>
-                      {appointment.status.replace('_', ' ')}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-          <div className="space-y-3">
-            <button 
-              onClick={() => navigate('/doctor-appointments')}
-              className="w-full text-left px-4 py-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-            >
-              <div className="flex items-center">
-                <CalendarIcon className="h-5 w-5 text-blue-600 mr-3" />
-                <div>
-                  <span className="text-blue-700 font-medium block">Manage Appointments</span>
-                  <span className="text-blue-600 text-xs">
-                    {stats?.requestedAppointments || 0} pending requests
-                  </span>
-                </div>
-              </div>
-            </button>
-            
-            <button 
-              onClick={() => navigate('/patients')}
-              className="w-full text-left px-4 py-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-            >
-              <div className="flex items-center">
-                <UserGroupIcon className="h-5 w-5 text-green-600 mr-3" />
-                <div>
-                  <span className="text-green-700 font-medium block">Patient History</span>
-                  <span className="text-green-600 text-xs">
-                    {stats?.totalPatients || 0} total patients
-                  </span>
-                </div>
-              </div>
-            </button>
-            
-            <button 
-              onClick={() => navigate('/doctor-profile')}
-              className="w-full text-left px-4 py-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
-            >
-              <div className="flex items-center">
-                <UserIcon className="h-5 w-5 text-purple-600 mr-3" />
-                <span className="text-purple-700 font-medium">Update Profile</span>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Appointment Requests Summary */}
-      {stats && stats.requestedAppointments > 0 && (
-        <div className="card bg-yellow-50 border border-yellow-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <ExclamationCircleIcon className="h-8 w-8 text-yellow-600 mr-3" />
-              <div>
-                <h3 className="text-lg font-medium text-yellow-900">
-                  {stats.requestedAppointments} Appointment Request{stats.requestedAppointments !== 1 ? 's' : ''} Pending
-                </h3>
-                <p className="text-sm text-yellow-700">
-                  Review and approve appointment requests from patients
-                </p>
-              </div>
-            </div>
-            <button 
-              onClick={() => navigate('/doctor-appointments')}
-              className="btn-primary"
-            >
-              Review Requests
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

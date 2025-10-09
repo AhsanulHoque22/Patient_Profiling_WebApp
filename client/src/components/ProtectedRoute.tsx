@@ -40,9 +40,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (hasUnauthorizedAccess) {
     // Redirect to appropriate dashboard based on user role
-    const redirectPath = user.role === 'doctor' ? '/doctor-dashboard' : 
-                        user.role === 'admin' ? '/admin-dashboard' : 
-                        '/dashboard';
+    const redirectPath = user.role === 'doctor' ? '/app/doctor-dashboard' : 
+                        user.role === 'admin' ? '/app/admin-dashboard' : 
+                        '/app/dashboard';
     return <Navigate to={redirectPath} replace />;
   }
 

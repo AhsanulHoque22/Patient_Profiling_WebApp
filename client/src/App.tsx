@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import RoleBasedRedirect from './components/RoleBasedRedirect';
@@ -29,6 +30,7 @@ import AdminRatings from './pages/AdminRatings';
 import LabReports from './pages/LabReports';
 import AdminLabReports from './pages/AdminLabReports';
 import AdminLabTests from './pages/AdminLabTests';
+import LandingPage from './pages/LandingPage';
 import NotFound from './pages/NotFound';
 
 // Create a client
@@ -49,17 +51,23 @@ function App() {
           <div className="min-h-screen bg-gray-50">
             <Routes>
               {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               
-              {/* Protected routes */}
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }>
+              {/* Legacy dashboard route - redirect to app */}
+              <Route path="/dashboard" element={<Navigate to="/app" replace />} />
+              
+        {/* Protected routes */}
+        <Route path="/app" element={
+          <ProtectedRoute>
+            <NotificationProvider>
+              <Layout />
+            </NotificationProvider>
+          </ProtectedRoute>
+        }>
                 <Route index element={<RoleBasedRedirect />} />
                 
                 {/* Patient-only routes */}

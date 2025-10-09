@@ -59,19 +59,15 @@ const register = async (req, res, next) => {
       });
     }
 
-    // Generate token
-    const token = generateToken(user.id);
-
     // Remove password from response
     const userResponse = user.toJSON();
     delete userResponse.password;
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: 'User registered successfully. Please login to continue.',
       data: {
-        user: userResponse,
-        token
+        user: userResponse
       }
     });
   } catch (error) {
@@ -82,19 +78,21 @@ const register = async (req, res, next) => {
 // Login user
 const login = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
+    const { email, phone, password } = req.body;
+
+    // Determine if login is by email or phone
+    let user;
+    if (email) {
+      user = await User.findOne({ where: { email } });
+    } else if (phone) {
+      user = await User.findOne({ where: { phone } });
+    } else {
       return res.status(400).json({
         success: false,
-        message: 'Validation errors',
-        errors: errors.array()
+        message: 'Email or phone number is required'
       });
     }
 
-    const { email, password } = req.body;
-
-    // Find user with password
-    const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(401).json({
         success: false,

@@ -908,6 +908,7 @@ const getAllPrescriptionLabTests = async (req, res, next) => {
   try {
     const { 
       search, 
+      status,
       dateFrom, 
       dateTo, 
       page = 1, 
@@ -1143,10 +1144,16 @@ const getAllPrescriptionLabTests = async (req, res, next) => {
       }
     }
     
+    // Apply status filter if provided
+    let filteredLabTests = labTests;
+    if (status && status !== 'all' && status !== '') {
+      filteredLabTests = labTests.filter(test => test.status === status);
+    }
+    
     res.json({
       success: true,
       data: {
-        labTests,
+        labTests: filteredLabTests,
         pagination: {
           currentPage: parseInt(page),
           totalPages: Math.ceil(prescriptions.count / parseInt(limit)),

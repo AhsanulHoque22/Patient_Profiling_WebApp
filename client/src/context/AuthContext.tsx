@@ -24,7 +24,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (emailOrPhone: string, password: string) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
   logout: () => void;
   updateProfile: (userData: Partial<User>) => Promise<void>;
@@ -119,12 +119,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [token]);
 
   // Login function
-  const login = async (email: string, password: string) => {
+  const login = async (emailOrPhone: string, password: string) => {
     try {
-      console.log('AuthContext: Attempting login with:', { email, password: '***' });
+      console.log('AuthContext: Attempting login with:', { emailOrPhone, password: '***' });
       console.log('AuthContext: API base URL:', axios.defaults.baseURL);
       
-      const response = await axios.post('/auth/login', { email, password });
+      // Determine if the input is email or phone
+      const isEmail = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(emailOrPhone);
+      const loginData = isEmail 
+        ? { email: emailOrPhone, password }
+        : { phone: emailOrPhone, password };
+      
+      const response = await axios.post('/auth/login', loginData);
       console.log('AuthContext: Login response:', response.data);
       
       const { user: userData, token: newToken } = response.data.data;

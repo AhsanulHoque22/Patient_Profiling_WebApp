@@ -13,7 +13,16 @@ import {
   ClockIcon,
   CameraIcon,
   PlusIcon,
-  XMarkIcon
+  XMarkIcon,
+  CheckCircleIcon,
+  PencilIcon,
+  StarIcon,
+  HeartIcon,
+  ShieldCheckIcon,
+  PhoneIcon,
+  HomeIcon,
+  CalendarIcon,
+  IdentificationIcon
 } from '@heroicons/react/24/outline';
 
 interface DoctorProfileData {
@@ -318,499 +327,674 @@ const DoctorProfile: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="page-header">Doctor Profile</h1>
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className="btn-primary"
-        >
-          {isEditing ? 'Cancel' : 'Edit Profile'}
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Image Section */}
-        <div className="lg:col-span-1">
-          <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Profile Image</h3>
-            <div className="text-center">
-              {profileData.profileImage ? (
-                <img
-                  src={`http://localhost:5000${profileData.profileImage}`}
-                  alt="Profile"
-                  className="h-32 w-32 rounded-full object-cover mx-auto mb-4"
-                />
-              ) : (
-                <div className="h-32 w-32 rounded-full bg-gray-200 flex items-center justify-center mx-auto mb-4">
-                  <UserIcon className="h-16 w-16 text-gray-400" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="space-y-8 p-6">
+        {/* Modern Header */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold tracking-tight mb-2">
+                  Doctor Profile 👨‍⚕️
+                </h1>
+                <p className="text-indigo-100 text-lg">
+                  Manage your professional information and practice details.
+                </p>
+              </div>
+              <div className="hidden md:block">
+                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                  <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center">
+                    <UserIcon className="h-8 w-8 text-white" />
+                  </div>
                 </div>
-              )}
-              {isEditing && (
-                <>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <button 
-                    type="button"
-                    onClick={handleImageUpload}
-                    disabled={isUploading}
-                    className="btn-outline flex items-center gap-2 mx-auto disabled:opacity-50"
-                  >
-                    <CameraIcon className="h-4 w-4" />
-                    {isUploading ? 'Uploading...' : 'Upload Image'}
-                  </button>
-                </>
-              )}
+              </div>
+            </div>
+            <div className="mt-6 flex items-center gap-4">
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
+                  isEditing 
+                    ? 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border border-white/30' 
+                    : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border border-white/30'
+                }`}
+              >
+                <PencilIcon className="h-5 w-5" />
+                {isEditing ? 'Cancel Editing' : 'Edit Profile'}
+              </button>
             </div>
           </div>
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
         </div>
 
-        {/* Main Profile Form */}
-        <div className="lg:col-span-2">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Basic Information */}
-            <div className="card">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
-              
-              {/* BMDC Registration Number - Display Only */}
-              {profileData?.bmdcRegistrationNumber && (
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                  <label className="block text-sm font-medium text-blue-800 mb-1">BMDC Registration Number</label>
-                  <p className="text-blue-900 font-semibold">{profileData.bmdcRegistrationNumber}</p>
-                  <p className="text-xs text-blue-600 mt-1">This is your unique BMDC registration identifier and cannot be changed.</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Image Section */}
+          <div className="lg:col-span-1">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+              <div className="flex items-center mb-6">
+                <div className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg p-3 text-white mr-3">
+                  <CameraIcon className="h-6 w-6" />
                 </div>
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Medical Department</label>
-                  {isEditing ? (
-                    <select
-                      {...register('department')}
-                      className={`w-full px-3 py-2 border ${
-                        errors.department ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
-                    >
-                      <option value="">Select Department</option>
-                      {MEDICAL_DEPARTMENTS.map((dept) => (
-                        <option key={dept.value} value={dept.value}>
-                          {dept.label}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <p className="text-gray-900">{getDepartmentLabel(profileData.department || '') || 'Not provided'}</p>
-                  )}
-                  {errors.department && (
-                    <p className="mt-1 text-sm text-red-600">{errors.department.message as string}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Experience (Years)</label>
-                  {isEditing ? (
-                    <input
-                      {...register('experience')}
-                      type="number"
-                      min="0"
-                      max="50"
-                      className={`w-full px-3 py-2 border ${
-                        errors.experience ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
-                      placeholder="Enter years of experience"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profileData.experience || 'Not provided'} years</p>
-                  )}
-                  {errors.experience && (
-                    <p className="mt-1 text-sm text-red-600">{errors.experience.message as string}</p>
-                  )}
+                  <h3 className="text-xl font-bold text-gray-900">Profile Image</h3>
+                  <p className="text-sm text-gray-600">Your professional photo</p>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Education</label>
-                  {isEditing ? (
-                    <input
-                      {...register('education')}
-                      className={`w-full px-3 py-2 border ${
-                        errors.education ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
-                      placeholder="Enter education details"
+              <div className="text-center">
+                {profileData.profileImage ? (
+                  <div className="relative inline-block">
+                    <img
+                      src={`http://localhost:5000${profileData.profileImage}`}
+                      alt="Profile"
+                      className="h-40 w-40 rounded-2xl object-cover mx-auto mb-6 shadow-lg border-4 border-white"
                     />
-                  ) : (
-                    <p className="text-gray-900">{profileData.education || 'Not provided'}</p>
-                  )}
-                  {errors.education && (
-                    <p className="mt-1 text-sm text-red-600">{errors.education.message as string}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Certifications</label>
-                  {isEditing ? (
-                    <input
-                      {...register('certifications')}
-                      className={`w-full px-3 py-2 border ${
-                        errors.certifications ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
-                      placeholder="Enter certifications"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profileData.certifications || 'Not provided'}</p>
-                  )}
-                  {errors.certifications && (
-                    <p className="mt-1 text-sm text-red-600">{errors.certifications.message as string}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hospital/Clinic Name</label>
-                  {isEditing ? (
-                    <input
-                      {...register('hospital')}
-                      className={`w-full px-3 py-2 border ${
-                        errors.hospital ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
-                      placeholder="Enter hospital name"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profileData.hospital || 'Not provided'}</p>
-                  )}
-                  {errors.hospital && (
-                    <p className="mt-1 text-sm text-red-600">{errors.hospital.message as string}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Consultation Fee (BDT)</label>
-                  {isEditing ? (
-                    <input
-                      {...register('consultationFee')}
-                      type="number"
-                      className={`w-full px-3 py-2 border ${
-                        errors.consultationFee ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
-                      placeholder="Enter consultation fee"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profileData.consultationFee ? formatCurrency(parseFloat(profileData.consultationFee)) : 'Not set'}</p>
-                  )}
-                  {errors.consultationFee && (
-                    <p className="mt-1 text-sm text-red-600">{errors.consultationFee.message as string}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                {isEditing ? (
-                  <input
-                    {...register('location')}
-                    className={`w-full px-3 py-2 border ${
-                      errors.location ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
-                    placeholder="Enter hospital address"
-                  />
-                ) : (
-                  <p className="text-gray-900">{profileData.location || 'Not provided'}</p>
-                )}
-                {errors.location && (
-                  <p className="mt-1 text-sm text-red-600">{errors.location.message as string}</p>
-                )}
-              </div>
-
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-                {isEditing ? (
-                  <textarea
-                    {...register('bio')}
-                    rows={3}
-                    className={`w-full px-3 py-2 border ${
-                      errors.bio ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
-                    placeholder="Tell patients about yourself"
-                  />
-                ) : (
-                  <p className="text-gray-900">{profileData.bio || 'No bio provided'}</p>
-                )}
-                {errors.bio && (
-                  <p className="mt-1 text-sm text-red-600">{errors.bio.message as string}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Chamber Times */}
-            <div className="card">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <ClockIcon className="h-5 w-5 mr-2" />
-                Chamber Times
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {days.map(day => (
-                  <div key={day} className="space-y-2">
-                    <h4 className="font-medium text-gray-700">{day}</h4>
-                    {timeSlots.map(timeSlot => (
-                      <label key={timeSlot} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={profileData.chamberTimes[day]?.includes(timeSlot) || false}
-                          onChange={() => toggleChamberTime(day, timeSlot)}
-                          disabled={!isEditing}
-                          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">{timeSlot}</span>
-                      </label>
-                    ))}
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg">
+                      <CheckCircleIcon className="h-5 w-5 text-white" />
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="h-40 w-40 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-6 shadow-lg border-4 border-white">
+                    <UserIcon className="h-20 w-20 text-gray-400" />
+                  </div>
+                )}
+                {isEditing && (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <button 
+                      type="button"
+                      onClick={handleImageUpload}
+                      disabled={isUploading}
+                      className="flex items-center gap-2 mx-auto px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <CameraIcon className="h-5 w-5" />
+                      {isUploading ? 'Uploading...' : 'Upload Image'}
+                    </button>
+                    <p className="text-xs text-gray-500 mt-2">
+                      JPG, PNG, GIF up to 5MB
+                    </p>
+                  </>
+                )}
               </div>
             </div>
+          </div>
 
-            {/* Degrees */}
-            <div className="card">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <AcademicCapIcon className="h-5 w-5 mr-2" />
-                Degrees & Qualifications
-              </h3>
-              <div className="space-y-3">
-                {profileData.degrees.map((degree, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded">
-                    <span className="text-gray-900">{degree}</span>
-                    {isEditing && (
-                      <button
-                        type="button"
-                        onClick={() => removeDegree(index)}
-                        className="text-red-600 hover:text-red-800"
+          {/* Main Profile Form */}
+          <div className="lg:col-span-2">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+              {/* Basic Information */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                <div className="flex items-center mb-6">
+                  <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg p-3 text-white mr-3">
+                    <IdentificationIcon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Basic Information</h3>
+                    <p className="text-sm text-gray-600">Your professional credentials</p>
+                  </div>
+                </div>
+                
+                {/* BMDC Registration Number - Display Only */}
+                {profileData?.bmdcRegistrationNumber && (
+                  <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50">
+                    <div className="flex items-center mb-2">
+                      <ShieldCheckIcon className="h-5 w-5 text-blue-600 mr-2" />
+                      <label className="block text-sm font-semibold text-blue-800">BMDC Registration Number</label>
+                    </div>
+                    <p className="text-blue-900 font-bold text-lg">{profileData.bmdcRegistrationNumber}</p>
+                    <p className="text-xs text-blue-600 mt-1">This is your unique BMDC registration identifier and cannot be changed.</p>
+                  </div>
+                )}
+              
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200/50">
+                    <div className="flex items-center mb-3">
+                      <HeartIcon className="h-5 w-5 text-blue-600 mr-2" />
+                      <label className="block text-sm font-semibold text-blue-800">Medical Department</label>
+                    </div>
+                    {isEditing ? (
+                      <select
+                        {...register('department')}
+                        className={`w-full px-4 py-3 border ${
+                          errors.department ? 'border-red-300 bg-red-50' : 'border-blue-200 bg-white/70'
+                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200`}
                       >
-                        <XMarkIcon className="h-4 w-4" />
-                      </button>
+                        <option value="">Select Department</option>
+                        {MEDICAL_DEPARTMENTS.map((dept) => (
+                          <option key={dept.value} value={dept.value}>
+                            {dept.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-blue-900 font-semibold text-lg">{getDepartmentLabel(profileData.department || '') || 'Not provided'}</p>
+                    )}
+                    {errors.department && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <span className="w-1 h-1 bg-red-500 rounded-full mr-2"></span>
+                        {errors.department.message as string}
+                      </p>
                     )}
                   </div>
-                ))}
-                {isEditing && (
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
+
+                  <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-200/50">
+                    <div className="flex items-center mb-3">
+                      <StarIcon className="h-5 w-5 text-emerald-600 mr-2" />
+                      <label className="block text-sm font-semibold text-emerald-800">Experience (Years)</label>
+                    </div>
+                    {isEditing ? (
+                      <input
+                        {...register('experience')}
+                        type="number"
+                        min="0"
+                        max="50"
+                        className={`w-full px-4 py-3 border ${
+                          errors.experience ? 'border-red-300 bg-red-50' : 'border-emerald-200 bg-white/70'
+                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200`}
+                        placeholder="Enter years of experience"
+                      />
+                    ) : (
+                      <p className="text-emerald-900 font-semibold text-lg">{profileData.experience || 'Not provided'} years</p>
+                    )}
+                    {errors.experience && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <span className="w-1 h-1 bg-red-500 rounded-full mr-2"></span>
+                        {errors.experience.message as string}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl p-4 border border-purple-200/50">
+                    <div className="flex items-center mb-3">
+                      <AcademicCapIcon className="h-5 w-5 text-purple-600 mr-2" />
+                      <label className="block text-sm font-semibold text-purple-800">Education</label>
+                    </div>
+                    {isEditing ? (
+                      <input
+                        {...register('education')}
+                        className={`w-full px-4 py-3 border ${
+                          errors.education ? 'border-red-300 bg-red-50' : 'border-purple-200 bg-white/70'
+                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200`}
+                        placeholder="Enter education details"
+                      />
+                    ) : (
+                      <p className="text-purple-900 font-semibold text-lg">{profileData.education || 'Not provided'}</p>
+                    )}
+                    {errors.education && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <span className="w-1 h-1 bg-red-500 rounded-full mr-2"></span>
+                        {errors.education.message as string}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200/50">
+                    <div className="flex items-center mb-3">
+                      <TrophyIcon className="h-5 w-5 text-amber-600 mr-2" />
+                      <label className="block text-sm font-semibold text-amber-800">Certifications</label>
+                    </div>
+                    {isEditing ? (
+                      <input
+                        {...register('certifications')}
+                        className={`w-full px-4 py-3 border ${
+                          errors.certifications ? 'border-red-300 bg-red-50' : 'border-amber-200 bg-white/70'
+                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200`}
+                        placeholder="Enter certifications"
+                      />
+                    ) : (
+                      <p className="text-amber-900 font-semibold text-lg">{profileData.certifications || 'Not provided'}</p>
+                    )}
+                    {errors.certifications && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <span className="w-1 h-1 bg-red-500 rounded-full mr-2"></span>
+                        {errors.certifications.message as string}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-xl p-4 border border-rose-200/50">
+                    <div className="flex items-center mb-3">
+                      <HomeIcon className="h-5 w-5 text-rose-600 mr-2" />
+                      <label className="block text-sm font-semibold text-rose-800">Hospital/Clinic Name</label>
+                    </div>
+                    {isEditing ? (
+                      <input
+                        {...register('hospital')}
+                        className={`w-full px-4 py-3 border ${
+                          errors.hospital ? 'border-red-300 bg-red-50' : 'border-rose-200 bg-white/70'
+                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all duration-200`}
+                        placeholder="Enter hospital name"
+                      />
+                    ) : (
+                      <p className="text-rose-900 font-semibold text-lg">{profileData.hospital || 'Not provided'}</p>
+                    )}
+                    {errors.hospital && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <span className="w-1 h-1 bg-red-500 rounded-full mr-2"></span>
+                        {errors.hospital.message as string}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200/50">
+                    <div className="flex items-center mb-3">
+                      <PhoneIcon className="h-5 w-5 text-emerald-600 mr-2" />
+                      <label className="block text-sm font-semibold text-emerald-800">Consultation Fee (BDT)</label>
+                    </div>
+                    {isEditing ? (
+                      <input
+                        {...register('consultationFee')}
+                        type="number"
+                        className={`w-full px-4 py-3 border ${
+                          errors.consultationFee ? 'border-red-300 bg-red-50' : 'border-emerald-200 bg-white/70'
+                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200`}
+                        placeholder="Enter consultation fee"
+                      />
+                    ) : (
+                      <p className="text-emerald-900 font-semibold text-lg">{profileData.consultationFee ? formatCurrency(parseFloat(profileData.consultationFee)) : 'Not set'}</p>
+                    )}
+                    {errors.consultationFee && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <span className="w-1 h-1 bg-red-500 rounded-full mr-2"></span>
+                        {errors.consultationFee.message as string}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-4 border border-indigo-200/50">
+                    <div className="flex items-center mb-3">
+                      <MapPinIcon className="h-5 w-5 text-indigo-600 mr-2" />
+                      <label className="block text-sm font-semibold text-indigo-800">Location</label>
+                    </div>
+                    {isEditing ? (
+                      <input
+                        {...register('location')}
+                        className={`w-full px-4 py-3 border ${
+                          errors.location ? 'border-red-300 bg-red-50' : 'border-indigo-200 bg-white/70'
+                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200`}
+                        placeholder="Enter hospital address"
+                      />
+                    ) : (
+                      <p className="text-indigo-900 font-semibold text-lg">{profileData.location || 'Not provided'}</p>
+                    )}
+                    {errors.location && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <span className="w-1 h-1 bg-red-500 rounded-full mr-2"></span>
+                        {errors.location.message as string}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-4 border border-slate-200/50">
+                    <div className="flex items-center mb-3">
+                      <UserIcon className="h-5 w-5 text-slate-600 mr-2" />
+                      <label className="block text-sm font-semibold text-slate-800">Bio</label>
+                    </div>
+                    {isEditing ? (
+                      <textarea
+                        {...register('bio')}
+                        rows={4}
+                        className={`w-full px-4 py-3 border ${
+                          errors.bio ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white/70'
+                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all duration-200 resize-none`}
+                        placeholder="Tell patients about yourself, your approach to medicine, and what makes you unique..."
+                      />
+                    ) : (
+                      <p className="text-slate-900 font-medium leading-relaxed">{profileData.bio || 'No bio provided'}</p>
+                    )}
+                    {errors.bio && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <span className="w-1 h-1 bg-red-500 rounded-full mr-2"></span>
+                        {errors.bio.message as string}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Chamber Times */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                <div className="flex items-center mb-6">
+                  <div className="bg-gradient-to-r from-indigo-500 to-blue-500 rounded-lg p-3 text-white mr-3">
+                    <ClockIcon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Chamber Times</h3>
+                    <p className="text-sm text-gray-600">Set your availability schedule</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {days.map(day => (
+                    <div key={day} className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-4 border border-gray-200/50">
+                      <h4 className="font-semibold text-gray-800 mb-4 text-center">{day}</h4>
+                      <div className="space-y-3">
+                        {timeSlots.map(timeSlot => (
+                          <label key={timeSlot} className="flex items-center cursor-pointer group">
+                            <input
+                              type="checkbox"
+                              checked={profileData.chamberTimes[day]?.includes(timeSlot) || false}
+                              onChange={() => toggleChamberTime(day, timeSlot)}
+                              disabled={!isEditing}
+                              className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-2 transition-all duration-200"
+                            />
+                            <span className="ml-3 text-sm text-gray-700 group-hover:text-indigo-600 transition-colors duration-200">{timeSlot}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Degrees */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                <div className="flex items-center mb-6">
+                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg p-3 text-white mr-3">
+                    <AcademicCapIcon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Degrees & Qualifications</h3>
+                    <p className="text-sm text-gray-600">Your academic achievements</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {profileData.degrees.map((degree, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-xl border border-purple-200/50 group hover:shadow-md transition-all duration-200">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center mr-3">
+                          <AcademicCapIcon className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="text-purple-900 font-semibold">{degree}</span>
+                      </div>
+                      {isEditing && (
+                        <button
+                          type="button"
+                          onClick={() => removeDegree(index)}
+                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {isEditing && (
+                    <div className="space-y-4">
+                      <div className="flex gap-3">
+                        <input
+                          type="text"
+                          value={newDegree}
+                          onChange={(e) => setNewDegree(e.target.value)}
+                          placeholder="Add degree (e.g., MBBS, MD)"
+                          className="flex-1 px-4 py-3 border border-purple-200 bg-white/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={addDegree}
+                          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                        >
+                          <PlusIcon className="h-4 w-4" />
+                          Add
+                        </button>
+                      </div>
+                      <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 border border-gray-200/50">
+                        <p className="text-sm font-medium text-gray-700 mb-3">Common degrees:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {commonDegrees.map((degree) => (
+                            <button
+                              key={degree}
+                              type="button"
+                              onClick={() => setNewDegree(degree)}
+                              className="px-3 py-1 bg-white/70 hover:bg-purple-100 rounded-lg text-xs font-medium text-gray-700 hover:text-purple-700 transition-all duration-200 border border-gray-200/50 hover:border-purple-200"
+                            >
+                              {degree}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Awards */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                <div className="flex items-center mb-6">
+                  <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg p-3 text-white mr-3">
+                    <TrophyIcon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Awards & Recognitions</h3>
+                    <p className="text-sm text-gray-600">Your professional achievements</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {profileData.awards.map((award, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-xl border border-amber-200/50 group hover:shadow-md transition-all duration-200">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center mr-3">
+                          <TrophyIcon className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="text-amber-900 font-semibold">{award}</span>
+                      </div>
+                      {isEditing && (
+                        <button
+                          type="button"
+                          onClick={() => removeAward(index)}
+                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {isEditing && (
+                    <div className="flex gap-3">
                       <input
                         type="text"
-                        value={newDegree}
-                        onChange={(e) => setNewDegree(e.target.value)}
-                        placeholder="Add degree (e.g., MBBS, MD)"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        value={newAward}
+                        onChange={(e) => setNewAward(e.target.value)}
+                        placeholder="Add award or recognition"
+                        className="flex-1 px-4 py-3 border border-amber-200 bg-white/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
                       />
                       <button
                         type="button"
-                        onClick={addDegree}
-                        className="btn-primary flex items-center gap-1"
+                        onClick={addAward}
+                        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
                       >
                         <PlusIcon className="h-4 w-4" />
                         Add
                       </button>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <p className="mb-2">Common degrees:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {commonDegrees.map((degree) => (
-                          <button
-                            key={degree}
-                            type="button"
-                            onClick={() => setNewDegree(degree)}
-                            className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs"
-                          >
-                            {degree}
-                          </button>
-                        ))}
+                  )}
+                </div>
+              </div>
+
+              {/* Languages */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                <div className="flex items-center mb-6">
+                  <div className="bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg p-3 text-white mr-3">
+                    <UserIcon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Languages</h3>
+                    <p className="text-sm text-gray-600">Languages you can communicate in</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {profileData.languages.map((language, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gradient-to-r from-emerald-50 to-green-50 p-4 rounded-xl border border-emerald-200/50 group hover:shadow-md transition-all duration-200">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center mr-3">
+                          <UserIcon className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="text-emerald-900 font-semibold">{language}</span>
+                      </div>
+                      {isEditing && (
+                        <button
+                          type="button"
+                          onClick={() => removeLanguage(index)}
+                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {isEditing && (
+                    <div className="space-y-4">
+                      <div className="flex gap-3">
+                        <input
+                          type="text"
+                          value={newLanguage}
+                          onChange={(e) => setNewLanguage(e.target.value)}
+                          placeholder="Add language"
+                          className="flex-1 px-4 py-3 border border-emerald-200 bg-white/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={addLanguage}
+                          className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                        >
+                          <PlusIcon className="h-4 w-4" />
+                          Add
+                        </button>
+                      </div>
+                      <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 border border-gray-200/50">
+                        <p className="text-sm font-medium text-gray-700 mb-3">Common languages:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {commonLanguages.map((language) => (
+                            <button
+                              key={language}
+                              type="button"
+                              onClick={() => setNewLanguage(language)}
+                              className="px-3 py-1 bg-white/70 hover:bg-emerald-100 rounded-lg text-xs font-medium text-gray-700 hover:text-emerald-700 transition-all duration-200 border border-gray-200/50 hover:border-emerald-200"
+                            >
+                              {language}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Awards */}
-            <div className="card">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <TrophyIcon className="h-5 w-5 mr-2" />
-                Awards & Recognitions
-              </h3>
-              <div className="space-y-3">
-                {profileData.awards.map((award, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded">
-                    <span className="text-gray-900">{award}</span>
-                    {isEditing && (
-                      <button
-                        type="button"
-                        onClick={() => removeAward(index)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <XMarkIcon className="h-4 w-4" />
-                      </button>
-                    )}
+              {/* Services */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                <div className="flex items-center mb-6">
+                  <div className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-lg p-3 text-white mr-3">
+                    <HeartIcon className="h-6 w-6" />
                   </div>
-                ))}
-                {isEditing && (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newAward}
-                      onChange={(e) => setNewAward(e.target.value)}
-                      placeholder="Add award or recognition"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                    />
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Medical Services</h3>
+                    <p className="text-sm text-gray-600">Services you provide to patients</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {profileData.services.map((service, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gradient-to-r from-rose-50 to-pink-50 p-4 rounded-xl border border-rose-200/50 group hover:shadow-md transition-all duration-200">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full flex items-center justify-center mr-3">
+                          <HeartIcon className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="text-rose-900 font-semibold">{service}</span>
+                      </div>
+                      {isEditing && (
+                        <button
+                          type="button"
+                          onClick={() => removeService(index)}
+                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {isEditing && (
+                    <div className="space-y-4">
+                      <div className="flex gap-3">
+                        <input
+                          type="text"
+                          value={newService}
+                          onChange={(e) => setNewService(e.target.value)}
+                          placeholder="Add medical service"
+                          className="flex-1 px-4 py-3 border border-rose-200 bg-white/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all duration-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={addService}
+                          className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl hover:from-rose-600 hover:to-pink-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                        >
+                          <PlusIcon className="h-4 w-4" />
+                          Add
+                        </button>
+                      </div>
+                      <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 border border-gray-200/50">
+                        <p className="text-sm font-medium text-gray-700 mb-3">Common services:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {commonServices.map((service) => (
+                            <button
+                              key={service}
+                              type="button"
+                              onClick={() => setNewService(service)}
+                              className="px-3 py-1 bg-white/70 hover:bg-rose-100 rounded-lg text-xs font-medium text-gray-700 hover:text-rose-700 transition-all duration-200 border border-gray-200/50 hover:border-rose-200"
+                            >
+                              {service}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {isEditing && (
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+                  <div className="flex justify-end gap-4">
                     <button
                       type="button"
-                      onClick={addAward}
-                      className="btn-primary flex items-center gap-1"
+                      onClick={() => setIsEditing(false)}
+                      className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium"
                     >
-                      <PlusIcon className="h-4 w-4" />
-                      Add
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircleIcon className="h-5 w-5" />
+                          Save Changes
+                        </>
+                      )}
                     </button>
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Languages */}
-            <div className="card">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Languages</h3>
-              <div className="space-y-3">
-                {profileData.languages.map((language, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded">
-                    <span className="text-gray-900">{language}</span>
-                    {isEditing && (
-                      <button
-                        type="button"
-                        onClick={() => removeLanguage(index)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <XMarkIcon className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                {isEditing && (
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newLanguage}
-                        onChange={(e) => setNewLanguage(e.target.value)}
-                        placeholder="Add language"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={addLanguage}
-                        className="btn-primary flex items-center gap-1"
-                      >
-                        <PlusIcon className="h-4 w-4" />
-                        Add
-                      </button>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      <p className="mb-2">Common languages:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {commonLanguages.map((language) => (
-                          <button
-                            key={language}
-                            type="button"
-                            onClick={() => setNewLanguage(language)}
-                            className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs"
-                          >
-                            {language}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Services */}
-            <div className="card">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Medical Services</h3>
-              <div className="space-y-3">
-                {profileData.services.map((service, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded">
-                    <span className="text-gray-900">{service}</span>
-                    {isEditing && (
-                      <button
-                        type="button"
-                        onClick={() => removeService(index)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <XMarkIcon className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                {isEditing && (
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newService}
-                        onChange={(e) => setNewService(e.target.value)}
-                        placeholder="Add medical service"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={addService}
-                        className="btn-primary flex items-center gap-1"
-                      >
-                        <PlusIcon className="h-4 w-4" />
-                        Add
-                      </button>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      <p className="mb-2">Common services:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {commonServices.map((service) => (
-                          <button
-                            key={service}
-                            type="button"
-                            onClick={() => setNewService(service)}
-                            className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs"
-                          >
-                            {service}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {isEditing && (
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="btn-outline"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="btn-primary"
-                >
-                  {isLoading ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            )}
-          </form>
+                </div>
+              )}
+            </form>
+          </div>
         </div>
       </div>
     </div>

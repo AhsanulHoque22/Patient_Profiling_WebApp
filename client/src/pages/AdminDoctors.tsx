@@ -12,7 +12,18 @@ import {
   ExclamationTriangleIcon,
   StarIcon,
   MapPinIcon,
-  AcademicCapIcon
+  AcademicCapIcon,
+  FunnelIcon,
+  ArrowPathIcon,
+  UserIcon,
+  BuildingOfficeIcon,
+  CalendarIcon,
+  ClockIcon,
+  CheckBadgeIcon,
+  XMarkIcon,
+  EllipsisVerticalIcon,
+  HeartIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import { MEDICAL_DEPARTMENTS, getDepartmentLabel } from '../utils/departments';
 
@@ -101,149 +112,253 @@ const AdminDoctors: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="page-header">Doctor Management</h1>
-        <p className="text-gray-600">Manage doctor profiles and verification status.</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      {/* Header Section */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center">
+              <HeartIcon className="h-8 w-8 text-blue-600 mr-3" />
+              Doctor Management
+            </h1>
+            <p className="text-gray-600">Comprehensive doctor administration and verification management</p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+              <ArrowPathIcon className="h-4 w-4 mr-2 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">Refresh</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="card">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-          <h3 className="text-lg font-medium text-gray-900">All Doctors</h3>
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
-            <div className="relative">
-              <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search doctors..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="input-field w-full sm:w-64 pl-10"
-              />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-blue-100 mr-4">
+              <UserGroupIcon className="h-6 w-6 text-blue-600" />
             </div>
-            <select 
-              value={verificationFilter}
-              onChange={(e) => setVerificationFilter(e.target.value)}
-              className="input-field w-full sm:w-auto"
-            >
-              <option value="">All Status</option>
-              <option value="true">Verified</option>
-              <option value="false">Pending Verification</option>
-            </select>
-            <select 
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="input-field w-full sm:w-auto"
-            >
-              <option value="">All Departments</option>
-              {MEDICAL_DEPARTMENTS.map((dept) => (
-                <option key={dept.value} value={dept.value}>
-                  {dept.label}
-                </option>
-              ))}
-            </select>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Doctors</p>
+              <p className="text-2xl font-bold text-gray-900">{doctorsData?.pagination?.totalRecords || 0}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-green-100 mr-4">
+              <CheckCircleIcon className="h-6 w-6 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Verified</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {doctorsData?.doctors?.filter((d: Doctor) => d.isVerified).length || 0}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-yellow-100 mr-4">
+              <ExclamationTriangleIcon className="h-6 w-6 text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Pending</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {doctorsData?.doctors?.filter((d: Doctor) => !d.isVerified).length || 0}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-purple-100 mr-4">
+              <ChartBarIcon className="h-6 w-6 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Departments</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {new Set(doctorsData?.doctors?.map((d: Doctor) => d.department)).size || 0}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters and Search */}
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search doctors by name, email, or BMDC number..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <select 
+                value={verificationFilter}
+                onChange={(e) => setVerificationFilter(e.target.value)}
+                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              >
+                <option value="">All Status</option>
+                <option value="true">Verified</option>
+                <option value="false">Pending Verification</option>
+              </select>
+              <select 
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              >
+                <option value="">All Departments</option>
+                {MEDICAL_DEPARTMENTS.map((dept) => (
+                  <option key={dept.value} value={dept.value}>
+                    {dept.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
         
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="p-6 space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="animate-pulse flex space-x-4 p-4">
-                <div className="rounded-full bg-gray-200 h-12 w-12"></div>
-                <div className="flex-1 space-y-2 py-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              <div key={i} className="animate-pulse bg-gray-50 rounded-xl p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="rounded-full bg-gray-200 h-16 w-16"></div>
+                  <div className="flex-1 space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    <div className="h-4 bg-gray-200 rounded w-16"></div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-8">
-            <p className="text-red-600">Failed to load doctors. Please try again later.</p>
+          <div className="p-8 text-center">
+            <div className="bg-red-50 rounded-xl p-6 max-w-md mx-auto">
+              <ExclamationTriangleIcon className="h-12 w-12 text-red-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-red-800 mb-2">Failed to Load Doctors</h3>
+              <p className="text-red-600">Please try again later or contact support if the problem persists.</p>
+            </div>
           </div>
         ) : !doctorsData?.doctors || doctorsData.doctors.length === 0 ? (
-          <div className="text-center py-8">
-            <UserGroupIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No doctors found.</p>
+          <div className="p-8 text-center">
+            <div className="bg-gray-50 rounded-xl p-8 max-w-md mx-auto">
+              <UserGroupIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-800 mb-2">No Doctors Found</h3>
+              <p className="text-gray-600">Try adjusting your search criteria or check back later.</p>
+            </div>
           </div>
         ) : (
-          <>
-            <div className="overflow-x-auto">
+          <div className="p-6">
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Doctor
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Doctor Profile
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Department
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Department & Experience
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Verification
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Verification Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rating
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Rating & Reviews
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {doctorsData.doctors.map((doctor: Doctor) => (
-                    <tr key={doctor.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                    <tr key={doctor.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-6 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0">
                             {doctor.profileImage ? (
                               <img
                                 src={`http://localhost:5000${doctor.profileImage}`}
                                 alt={`Dr. ${doctor.user.firstName} ${doctor.user.lastName}`}
-                                className="h-10 w-10 rounded-full object-cover"
+                                className="h-12 w-12 rounded-full object-cover ring-2 ring-gray-100"
                               />
                             ) : (
-                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                <span className="text-sm font-medium text-gray-700">
+                              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center ring-2 ring-gray-100">
+                                <span className="text-sm font-bold text-blue-700">
                                   {doctor.user.firstName.charAt(0)}{doctor.user.lastName.charAt(0)}
                                 </span>
                               </div>
                             )}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-semibold text-gray-900">
                               Dr. {doctor.user.firstName} {doctor.user.lastName}
                             </div>
-                            <div className="text-sm text-gray-500">{doctor.user.email}</div>
-                            <div className="text-xs text-gray-400">BMDC: {doctor.bmdcRegistrationNumber}</div>
+                            <div className="text-sm text-gray-600">{doctor.user.email}</div>
+                            <div className="text-xs text-gray-500 flex items-center mt-1">
+                              <ShieldCheckIcon className="h-3 w-3 mr-1" />
+                              BMDC: {doctor.bmdcRegistrationNumber}
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                      <td className="px-6 py-6 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
                           {getDepartmentLabel(doctor.department) || 'General Medicine'}
                         </div>
-                        <div className="text-sm text-gray-500">{doctor.experience} years experience</div>
+                        <div className="text-sm text-gray-600 flex items-center mt-1">
+                          <CalendarIcon className="h-3 w-3 mr-1" />
+                          {doctor.experience} years experience
+                        </div>
+                        {doctor.hospital && (
+                          <div className="text-xs text-gray-500 flex items-center mt-1">
+                            <BuildingOfficeIcon className="h-3 w-3 mr-1" />
+                            {doctor.hospital}
+                          </div>
+                        )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-6 whitespace-nowrap">
                         <div className="flex items-center space-x-2">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getVerificationBadgeColor(doctor.isVerified)}`}>
+                          <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getVerificationBadgeColor(doctor.isVerified)}`}>
                             {doctor.isVerified ? 'Verified' : 'Pending'}
                           </span>
                           {doctor.isVerified ? (
-                            <ShieldCheckIcon className="h-4 w-4 text-green-500" title="Verified" />
+                            <CheckBadgeIcon className="h-5 w-5 text-green-500" title="Verified" />
                           ) : (
-                            <ExclamationTriangleIcon className="h-4 w-4 text-yellow-500" title="Pending Verification" />
+                            <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" title="Pending Verification" />
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-6 whitespace-nowrap">
                         {(doctor.calculatedRating || 0) > 0 ? (
                           <div className="flex items-center">
-                            <StarIcon className="h-4 w-4 text-yellow-400 mr-1" />
-                            <span className="text-sm text-gray-900">
-                              {doctor.calculatedRating?.toFixed(1)}
-                            </span>
-                            <span className="text-xs text-gray-500 ml-1">
+                            <div className="flex items-center">
+                              <StarIcon className="h-4 w-4 text-yellow-400 mr-1" />
+                              <span className="text-sm font-semibold text-gray-900">
+                                {doctor.calculatedRating?.toFixed(1)}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-500 ml-2">
                               ({doctor.totalRatings} reviews)
                             </span>
                           </div>
@@ -251,33 +366,37 @@ const AdminDoctors: React.FC = () => {
                           <span className="text-sm text-gray-500">No ratings yet</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button 
-                          onClick={() => handleViewDoctor(doctor)}
-                          className="text-blue-600 hover:text-blue-900 inline-flex items-center"
-                        >
-                          <EyeIcon className="h-4 w-4 mr-1" />
-                          View
-                        </button>
-                        <button 
-                          onClick={() => handleVerificationToggle(doctor)}
-                          className={`inline-flex items-center ${
-                            doctor.isVerified ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
-                          }`}
-                          disabled={verifyDoctorMutation.isPending}
-                        >
-                          {doctor.isVerified ? (
-                            <>
-                              <XCircleIcon className="h-4 w-4 mr-1" />
-                              Unverify
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircleIcon className="h-4 w-4 mr-1" />
-                              Verify
-                            </>
-                          )}
-                        </button>
+                      <td className="px-6 py-6 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center space-x-3">
+                          <button 
+                            onClick={() => handleViewDoctor(doctor)}
+                            className="inline-flex items-center px-3 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <EyeIcon className="h-4 w-4 mr-1" />
+                            View
+                          </button>
+                          <button 
+                            onClick={() => handleVerificationToggle(doctor)}
+                            className={`inline-flex items-center px-3 py-2 rounded-lg transition-colors ${
+                              doctor.isVerified 
+                                ? 'text-red-600 hover:text-red-800 hover:bg-red-50' 
+                                : 'text-green-600 hover:text-green-800 hover:bg-green-50'
+                            }`}
+                            disabled={verifyDoctorMutation.isPending}
+                          >
+                            {doctor.isVerified ? (
+                              <>
+                                <XCircleIcon className="h-4 w-4 mr-1" />
+                                Unverify
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircleIcon className="h-4 w-4 mr-1" />
+                                Verify
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -285,168 +404,303 @@ const AdminDoctors: React.FC = () => {
               </table>
             </div>
 
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-4">
+              {doctorsData.doctors.map((doctor: Doctor) => (
+                <div key={doctor.id} className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-4">
+                      {doctor.profileImage ? (
+                        <img
+                          src={`http://localhost:5000${doctor.profileImage}`}
+                          alt={`Dr. ${doctor.user.firstName} ${doctor.user.lastName}`}
+                          className="h-16 w-16 rounded-full object-cover ring-2 ring-gray-100"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center ring-2 ring-gray-100">
+                          <span className="text-lg font-bold text-blue-700">
+                            {doctor.user.firstName.charAt(0)}{doctor.user.lastName.charAt(0)}
+                          </span>
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Dr. {doctor.user.firstName} {doctor.user.lastName}
+                        </h3>
+                        <p className="text-sm text-gray-600">{doctor.user.email}</p>
+                        <p className="text-xs text-gray-500 flex items-center mt-1">
+                          <ShieldCheckIcon className="h-3 w-3 mr-1" />
+                          BMDC: {doctor.bmdcRegistrationNumber}
+                        </p>
+                      </div>
+                    </div>
+                    <EllipsisVerticalIcon className="h-5 w-5 text-gray-400" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Department</p>
+                      <p className="text-sm text-gray-900">{getDepartmentLabel(doctor.department) || 'General Medicine'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Experience</p>
+                      <p className="text-sm text-gray-900">{doctor.experience} years</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getVerificationBadgeColor(doctor.isVerified)}`}>
+                        {doctor.isVerified ? 'Verified' : 'Pending'}
+                      </span>
+                      {doctor.isVerified ? (
+                        <CheckBadgeIcon className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <ExclamationTriangleIcon className="h-4 w-4 text-yellow-500" />
+                      )}
+                    </div>
+                    
+                    {(doctor.calculatedRating || 0) > 0 && (
+                      <div className="flex items-center">
+                        <StarIcon className="h-4 w-4 text-yellow-400 mr-1" />
+                        <span className="text-sm font-semibold text-gray-900">
+                          {doctor.calculatedRating?.toFixed(1)}
+                        </span>
+                        <span className="text-xs text-gray-500 ml-1">
+                          ({doctor.totalRatings})
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <button 
+                      onClick={() => handleViewDoctor(doctor)}
+                      className="flex-1 mr-2 inline-flex items-center justify-center px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <EyeIcon className="h-4 w-4 mr-2" />
+                      View Details
+                    </button>
+                    <button 
+                      onClick={() => handleVerificationToggle(doctor)}
+                      className={`flex-1 inline-flex items-center justify-center px-4 py-2 rounded-lg transition-colors ${
+                        doctor.isVerified 
+                          ? 'text-red-600 hover:text-red-800 hover:bg-red-50' 
+                          : 'text-green-600 hover:text-green-800 hover:bg-green-50'
+                      }`}
+                      disabled={verifyDoctorMutation.isPending}
+                    >
+                      {doctor.isVerified ? (
+                        <>
+                          <XCircleIcon className="h-4 w-4 mr-2" />
+                          Unverify
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircleIcon className="h-4 w-4 mr-2" />
+                          Verify
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             {/* Pagination */}
             {doctorsData.pagination && doctorsData.pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
-                <div className="flex flex-1 justify-between sm:hidden">
-                  <button
-                    onClick={() => setPage(page - 1)}
-                    disabled={!doctorsData.pagination.hasPrev}
-                    className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => setPage(page + 1)}
-                    disabled={!doctorsData.pagination.hasNext}
-                    className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </div>
-                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm text-gray-700">
-                      Showing page <span className="font-medium">{doctorsData.pagination.currentPage}</span> of{' '}
-                      <span className="font-medium">{doctorsData.pagination.totalPages}</span> ({doctorsData.pagination.totalRecords} total doctors)
-                    </p>
+              <div className="bg-gray-50 border-t border-gray-200 px-6 py-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-sm text-gray-700">
+                    Showing page <span className="font-semibold text-gray-900">{doctorsData.pagination.currentPage}</span> of{' '}
+                    <span className="font-semibold text-gray-900">{doctorsData.pagination.totalPages}</span> 
+                    <span className="text-gray-500 ml-1">({doctorsData.pagination.totalRecords} total doctors)</span>
                   </div>
-                  <div>
-                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                      <button
-                        onClick={() => setPage(page - 1)}
-                        disabled={!doctorsData.pagination.hasPrev}
-                        className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
-                      >
-                        Previous
-                      </button>
-                      <button
-                        onClick={() => setPage(page + 1)}
-                        disabled={!doctorsData.pagination.hasNext}
-                        className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
-                      >
-                        Next
-                      </button>
-                    </nav>
+                  
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setPage(page - 1)}
+                      disabled={!doctorsData.pagination.hasPrev}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Previous
+                    </button>
+                    
+                    {/* Page Numbers */}
+                    <div className="hidden sm:flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, doctorsData.pagination.totalPages) }, (_, i) => {
+                        const pageNum = Math.max(1, Math.min(doctorsData.pagination.totalPages - 4, doctorsData.pagination.currentPage - 2)) + i;
+                        if (pageNum > doctorsData.pagination.totalPages) return null;
+                        
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setPage(pageNum)}
+                            className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                              pageNum === doctorsData.pagination.currentPage
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    <button
+                      onClick={() => setPage(page + 1)}
+                      disabled={!doctorsData.pagination.hasNext}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Next
+                    </button>
                   </div>
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
       {/* Doctor Detail Modal */}
       {showDoctorModal && selectedDoctor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Doctor Profile - Dr. {selectedDoctor.user.firstName} {selectedDoctor.user.lastName}
-                </h2>
-                <button
-                  onClick={() => setShowDoctorModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Profile Image and Basic Info */}
-                <div className="lg:col-span-1">
-                  <div className="text-center">
-                    {selectedDoctor.profileImage ? (
-                      <img
-                        src={`http://localhost:5000${selectedDoctor.profileImage}`}
-                        alt={`Dr. ${selectedDoctor.user.firstName} ${selectedDoctor.user.lastName}`}
-                        className="h-32 w-32 rounded-full object-cover mx-auto mb-4"
-                      />
-                    ) : (
-                      <div className="h-32 w-32 rounded-full bg-primary-100 flex items-center justify-center mx-auto mb-4">
-                        <UserGroupIcon className="h-16 w-16 text-primary-600" />
-                      </div>
-                    )}
-                    <h3 className="text-xl font-semibold text-gray-900">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  {selectedDoctor.profileImage ? (
+                    <img
+                      src={`http://localhost:5000${selectedDoctor.profileImage}`}
+                      alt={`Dr. ${selectedDoctor.user.firstName} ${selectedDoctor.user.lastName}`}
+                      className="h-16 w-16 rounded-full object-cover ring-4 ring-white/20"
+                    />
+                  ) : (
+                    <div className="h-16 w-16 rounded-full bg-white/20 flex items-center justify-center ring-4 ring-white/20">
+                      <span className="text-2xl font-bold text-white">
+                        {selectedDoctor.user.firstName.charAt(0)}{selectedDoctor.user.lastName.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">
                       Dr. {selectedDoctor.user.firstName} {selectedDoctor.user.lastName}
-                    </h3>
-                    <p className="text-primary-600">
+                    </h2>
+                    <p className="text-blue-100">
                       {getDepartmentLabel(selectedDoctor.department) || 'General Medicine'}
                     </p>
-                    {(selectedDoctor.calculatedRating || 0) > 0 && (
-                      <div className="flex items-center justify-center mt-2">
-                        <StarIcon className="h-5 w-5 text-yellow-400 mr-1" />
-                        <span className="text-gray-600">
-                          {selectedDoctor.calculatedRating?.toFixed(1)}
-                          {selectedDoctor.totalRatings && selectedDoctor.totalRatings > 0 && (
-                            <span className="text-gray-500 ml-1">({selectedDoctor.totalRatings} reviews)</span>
-                          )}
-                        </span>
-                      </div>
-                    )}
-                    {/* Verification Status */}
-                    <div className="mt-3">
-                      <span className={`px-3 py-1 text-sm font-semibold rounded-full ${getVerificationBadgeColor(selectedDoctor.isVerified)}`}>
+                    <div className="flex items-center mt-2">
+                      <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                        selectedDoctor.isVerified 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
                         {selectedDoctor.isVerified ? 'Verified Doctor' : 'Pending Verification'}
                       </span>
+                      {(selectedDoctor.calculatedRating || 0) > 0 && (
+                        <div className="flex items-center ml-3 text-white">
+                          <StarIcon className="h-4 w-4 text-yellow-300 mr-1" />
+                          <span className="text-sm font-medium">
+                            {selectedDoctor.calculatedRating?.toFixed(1)}
+                            {selectedDoctor.totalRatings && selectedDoctor.totalRatings > 0 && (
+                              <span className="text-blue-200 ml-1">({selectedDoctor.totalRatings} reviews)</span>
+                            )}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
+                <button
+                  onClick={() => setShowDoctorModal(false)}
+                  className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
 
-                {/* Detailed Information */}
-                <div className="lg:col-span-2 space-y-6">
-                  {/* Personal Information */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-3">Personal Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Email</label>
+            {/* Modal Content */}
+            <div className="p-6">
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Personal Information */}
+                <div className="space-y-6">
+                  <div className="bg-gray-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <UserIcon className="h-5 w-5 mr-2 text-blue-600" />
+                      Personal Information
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="bg-white rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Email Address</label>
                         <p className="text-gray-900">{selectedDoctor.user.email}</p>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Phone</label>
+                      <div className="bg-white rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Phone Number</label>
                         <p className="text-gray-900">{selectedDoctor.user.phone || 'Not provided'}</p>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">BMDC Registration</label>
-                        <p className="text-gray-900">{selectedDoctor.bmdcRegistrationNumber}</p>
+                      <div className="bg-white rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-1">BMDC Registration</label>
+                        <p className="text-gray-900 font-mono">{selectedDoctor.bmdcRegistrationNumber}</p>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Experience</label>
+                      <div className="bg-white rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Experience</label>
                         <p className="text-gray-900">{selectedDoctor.experience} years</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Professional Information */}
-                  {(selectedDoctor.hospital || selectedDoctor.location) && (
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                        <MapPinIcon className="h-5 w-5 mr-2" />
-                        Practice Location
-                      </h4>
+                  <div className="bg-blue-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <BuildingOfficeIcon className="h-5 w-5 mr-2 text-blue-600" />
+                      Professional Information
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="bg-white rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Department</label>
+                        <p className="text-gray-900">{getDepartmentLabel(selectedDoctor.department) || 'General Medicine'}</p>
+                      </div>
                       {selectedDoctor.hospital && (
-                        <p className="text-gray-700 font-medium">{selectedDoctor.hospital}</p>
+                        <div className="bg-white rounded-lg p-4">
+                          <label className="text-sm font-medium text-gray-500 block mb-1">Hospital/Clinic</label>
+                          <p className="text-gray-900">{selectedDoctor.hospital}</p>
+                        </div>
                       )}
                       {selectedDoctor.location && (
-                        <p className="text-gray-600">{selectedDoctor.location}</p>
+                        <div className="bg-white rounded-lg p-4">
+                          <label className="text-sm font-medium text-gray-500 block mb-1">Location</label>
+                          <p className="text-gray-900 flex items-center">
+                            <MapPinIcon className="h-4 w-4 mr-2 text-gray-400" />
+                            {selectedDoctor.location}
+                          </p>
+                        </div>
+                      )}
+                      {selectedDoctor.consultationFee && (
+                        <div className="bg-white rounded-lg p-4">
+                          <label className="text-sm font-medium text-gray-500 block mb-1">Consultation Fee</label>
+                          <p className="text-gray-900">৳{selectedDoctor.consultationFee}</p>
+                        </div>
                       )}
                     </div>
-                  )}
+                  </div>
+                </div>
 
+                {/* Additional Information */}
+                <div className="space-y-6">
                   {/* Qualifications */}
                   {selectedDoctor.degrees && selectedDoctor.degrees.length > 0 && (
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                        <AcademicCapIcon className="h-5 w-5 mr-2" />
+                    <div className="bg-green-50 rounded-xl p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <AcademicCapIcon className="h-5 w-5 mr-2 text-green-600" />
                         Qualifications
-                      </h4>
+                      </h3>
                       <div className="flex flex-wrap gap-2">
                         {selectedDoctor.degrees.map((degree, index) => (
-                          <span key={index} className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
+                          <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-lg text-sm font-medium">
                             {degree}
                           </span>
                         ))}
@@ -456,58 +710,78 @@ const AdminDoctors: React.FC = () => {
 
                   {/* Bio */}
                   {selectedDoctor.bio && (
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-gray-900 mb-3">About</h4>
-                      <p className="text-gray-700">{selectedDoctor.bio}</p>
+                    <div className="bg-gray-50 rounded-xl p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">About Doctor</h3>
+                      <p className="text-gray-700 leading-relaxed">{selectedDoctor.bio}</p>
                     </div>
                   )}
 
                   {/* Account Status */}
-                  <div className="bg-purple-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-3">Account Status</h4>
+                  <div className="bg-purple-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <ShieldCheckIcon className="h-5 w-5 mr-2 text-purple-600" />
+                      Account Status
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Account Status</label>
-                        <p className={`text-sm font-semibold ${selectedDoctor.user.isActive ? 'text-green-600' : 'text-red-600'}`}>
-                          {selectedDoctor.user.isActive ? 'Active' : 'Inactive'}
-                        </p>
+                      <div className="bg-white rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Account Status</label>
+                        <div className="flex items-center">
+                          <div className={`w-3 h-3 rounded-full mr-2 ${selectedDoctor.user.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                          <p className={`text-sm font-semibold ${selectedDoctor.user.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                            {selectedDoctor.user.isActive ? 'Active' : 'Inactive'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Email Verified</label>
-                        <p className={`text-sm font-semibold ${selectedDoctor.user.emailVerified ? 'text-green-600' : 'text-red-600'}`}>
-                          {selectedDoctor.user.emailVerified ? 'Yes' : 'No'}
-                        </p>
+                      <div className="bg-white rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Email Verified</label>
+                        <div className="flex items-center">
+                          {selectedDoctor.user.emailVerified ? (
+                            <CheckBadgeIcon className="h-4 w-4 text-green-500 mr-2" />
+                          ) : (
+                            <XMarkIcon className="h-4 w-4 text-red-500 mr-2" />
+                          )}
+                          <p className={`text-sm font-semibold ${selectedDoctor.user.emailVerified ? 'text-green-600' : 'text-red-600'}`}>
+                            {selectedDoctor.user.emailVerified ? 'Verified' : 'Not Verified'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Last Login</label>
-                        <p className="text-gray-900">
+                      <div className="bg-white rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Last Login</label>
+                        <p className="text-gray-900 flex items-center">
+                          <ClockIcon className="h-4 w-4 mr-2 text-gray-400" />
                           {selectedDoctor.user.lastLogin ? new Date(selectedDoctor.user.lastLogin).toLocaleString() : 'Never'}
                         </p>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Member Since</label>
-                        <p className="text-gray-900">{new Date(selectedDoctor.createdAt).toLocaleDateString()}</p>
+                      <div className="bg-white rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Member Since</label>
+                        <p className="text-gray-900 flex items-center">
+                          <CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />
+                          {new Date(selectedDoctor.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end gap-3">
+              {/* Modal Actions */}
+              <div className="mt-8 flex justify-end gap-4 pt-6 border-t border-gray-200">
+                <button
+                  onClick={() => setShowDoctorModal(false)}
+                  className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                >
+                  Close
+                </button>
                 <button
                   onClick={() => handleVerificationToggle(selectedDoctor)}
-                  className={`btn-outline ${
-                    selectedDoctor.isVerified ? 'text-red-600 border-red-300 hover:bg-red-50' : 'text-green-600 border-green-300 hover:bg-green-50'
+                  className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                    selectedDoctor.isVerified 
+                      ? 'text-red-700 bg-red-100 hover:bg-red-200' 
+                      : 'text-green-700 bg-green-100 hover:bg-green-200'
                   }`}
                   disabled={verifyDoctorMutation.isPending}
                 >
                   {selectedDoctor.isVerified ? 'Unverify Doctor' : 'Verify Doctor'}
-                </button>
-                <button
-                  onClick={() => setShowDoctorModal(false)}
-                  className="btn-primary"
-                >
-                  Close
                 </button>
               </div>
             </div>

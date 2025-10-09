@@ -18,6 +18,7 @@ const ratingRoutes = require('./routes/ratings');
 const labTestRoutes = require('./routes/labTests');
 const bkashRoutes = require('./routes/bkash');
 const medicineRoutes = require('./routes/medicine');
+const notificationRoutes = require('./routes/notifications');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -69,6 +70,7 @@ app.use('/api/ratings', ratingRoutes);
 app.use('/api/lab-tests', labTestRoutes);
 app.use('/api/bkash', bkashRoutes);
 app.use('/api/medicines', medicineRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

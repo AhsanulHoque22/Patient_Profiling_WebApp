@@ -13,10 +13,12 @@ const Medicine = require('./Medicine');
 const MedicineReminder = require('./MedicineReminder');
 const MedicineDosage = require('./MedicineDosage');
 const PatientReminderSettings = require('./PatientReminderSettings');
+const Notification = require('./Notification');
 
 // User associations
 User.hasOne(Patient, { foreignKey: 'userId', as: 'patientProfile' });
 User.hasOne(Doctor, { foreignKey: 'userId', as: 'doctorProfile' });
+User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
 
 // Patient associations
 Patient.belongsTo(User, { foreignKey: 'userId', as: 'user' });
@@ -99,6 +101,9 @@ MedicineDosage.belongsTo(Patient, { foreignKey: 'patientId', as: 'patient' });
 // Patient Reminder Settings associations
 PatientReminderSettings.belongsTo(Patient, { foreignKey: 'patientId', as: 'patient' });
 
+// Notification associations
+Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 module.exports = {
   User,
   Patient,
@@ -114,5 +119,6 @@ module.exports = {
   Medicine,
   MedicineReminder,
   MedicineDosage,
-  PatientReminderSettings
+  PatientReminderSettings,
+  Notification
 };

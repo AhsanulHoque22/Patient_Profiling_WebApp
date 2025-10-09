@@ -260,6 +260,12 @@ const LabReports: React.FC = () => {
 
   // Helper function to get remaining amount
   const getRemainingAmount = (test: any) => {
+    // For regular lab orders, use the dueAmount field directly
+    if (test.type === 'ordered' && test.dueAmount !== undefined) {
+      return parseFloat(String(test.dueAmount || 0));
+    }
+    
+    // For prescription lab tests, calculate from payments
     const totalAmount = parseFloat(String(test.price || test.totalAmount || 0));
     const paidAmount = test.payments ? test.payments.reduce((sum: number, payment: any) => {
       return sum + parseFloat(String(payment.amount || 0));
@@ -270,6 +276,12 @@ const LabReports: React.FC = () => {
 
   // Helper function to get paid amount
   const getPaidAmount = (test: any) => {
+    // For regular lab orders, use the paidAmount field directly
+    if (test.type === 'ordered' && test.paidAmount !== undefined) {
+      return parseFloat(String(test.paidAmount || 0));
+    }
+    
+    // For prescription lab tests, calculate from payments array
     if (test.payments && test.payments.length > 0) {
       return test.payments.reduce((sum: number, payment: any) => {
         return sum + parseFloat(String(payment.amount || 0));

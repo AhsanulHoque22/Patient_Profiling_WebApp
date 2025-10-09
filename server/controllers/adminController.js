@@ -170,7 +170,8 @@ const getSystemStats = async (req, res, next) => {
       totalMedicalRecords,
       activeUsers,
       todayAppointments,
-      completedAppointments
+      completedAppointments,
+      pendingAppointments
     ] = await Promise.all([
       User.count(),
       User.count({ where: { role: 'patient' } }),
@@ -186,7 +187,8 @@ const getSystemStats = async (req, res, next) => {
           }
         }
       }),
-      Appointment.count({ where: { status: 'completed' } })
+      Appointment.count({ where: { status: 'completed' } }),
+      Appointment.count({ where: { status: 'requested' } })
     ]);
 
     res.json({
@@ -200,7 +202,8 @@ const getSystemStats = async (req, res, next) => {
           totalMedicalRecords,
           activeUsers,
           todayAppointments,
-          completedAppointments
+          completedAppointments,
+          pendingAppointments
         }
       }
     });
