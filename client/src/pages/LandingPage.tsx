@@ -141,6 +141,16 @@ const LandingPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [isAnimating]);
 
+  useEffect(() => {
+    // Add smooth scroll behavior to the document
+    document.documentElement.style.scrollBehavior = 'smooth';
+    
+    // Cleanup function to remove the style when component unmounts
+    return () => {
+      document.documentElement.style.scrollBehavior = 'auto';
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -160,10 +170,42 @@ const LandingPage: React.FC = () => {
               <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">HealthCare Pro</span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-gray-600 hover:text-indigo-600 transition-colors duration-200 font-medium">Features</a>
-              <a href="#stats" className="text-gray-600 hover:text-indigo-600 transition-colors duration-200 font-medium">Stats</a>
-              <a href="#testimonials" className="text-gray-600 hover:text-indigo-600 transition-colors duration-200 font-medium">Reviews</a>
-              <a href="#contact" className="text-gray-600 hover:text-indigo-600 transition-colors duration-200 font-medium">Contact</a>
+              <button 
+                onClick={() => {
+                  const element = document.getElementById('features');
+                  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="text-gray-600 hover:text-indigo-600 transition-colors duration-200 font-medium"
+              >
+                Features
+              </button>
+              <button 
+                onClick={() => {
+                  const element = document.getElementById('stats');
+                  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="text-gray-600 hover:text-indigo-600 transition-colors duration-200 font-medium"
+              >
+                Stats
+              </button>
+              <button 
+                onClick={() => {
+                  const element = document.getElementById('testimonials');
+                  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="text-gray-600 hover:text-indigo-600 transition-colors duration-200 font-medium"
+              >
+                Reviews
+              </button>
+              <button 
+                onClick={() => {
+                  const element = document.getElementById('contact');
+                  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="text-gray-600 hover:text-indigo-600 transition-colors duration-200 font-medium"
+              >
+                Contact
+              </button>
             </div>
             <div className="flex items-center space-x-4">
               <Link 
@@ -567,12 +609,12 @@ const LandingPage: React.FC = () => {
                     <EyeIcon className="h-6 w-6 mr-2 text-indigo-600" />
                     Why Choose Us?
                   </h3>
-                  <div className="space-y-4">
+                <div className="space-y-4">
                     <div className="flex items-start group">
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
                         <CheckCircleIcon className="h-5 w-5 text-green-500" />
                       </div>
-                      <div>
+                    <div>
                         <h4 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">Verified Healthcare Providers</h4>
                         <p className="text-gray-600 text-sm leading-relaxed">All doctors are thoroughly vetted and certified</p>
                       </div>
@@ -580,8 +622,8 @@ const LandingPage: React.FC = () => {
                     <div className="flex items-start group">
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
                         <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                      </div>
-                      <div>
+                  </div>
+                    <div>
                         <h4 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">HIPAA Compliant</h4>
                         <p className="text-gray-600 text-sm leading-relaxed">Your health data is protected with enterprise-grade security</p>
                       </div>
@@ -589,8 +631,8 @@ const LandingPage: React.FC = () => {
                     <div className="flex items-start group">
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
                         <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                      </div>
-                      <div>
+                  </div>
+                    <div>
                         <h4 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">24/7 Support</h4>
                         <p className="text-gray-600 text-sm leading-relaxed">Round-the-clock assistance whenever you need it</p>
                       </div>
@@ -598,8 +640,8 @@ const LandingPage: React.FC = () => {
                     <div className="flex items-start group">
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
                         <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                      </div>
-                      <div>
+                  </div>
+                    <div>
                         <h4 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">Comprehensive Platform</h4>
                         <p className="text-gray-600 text-sm leading-relaxed">Everything you need for complete healthcare management</p>
                       </div>
@@ -732,6 +774,77 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Contact Section */}
+      <section id="contact" className="py-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium text-white mb-6">
+              <PhoneIcon className="h-4 w-4 mr-2" />
+              Get In Touch
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Ready to Transform Your Healthcare Experience?
+            </h2>
+            <p className="text-xl text-white/80 max-w-3xl mx-auto">
+              Join thousands of healthcare providers and patients who have already made the switch
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <div className="flex items-center group">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
+                  <PhoneIcon className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Phone Support</h3>
+                  <p className="text-white/80">+1 (555) 123-4567</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center group">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
+                  <EnvelopeIcon className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Email Support</h3>
+                  <p className="text-white/80">support@healthcarepro.com</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center group">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
+                  <MapPinIcon className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Office Location</h3>
+                  <p className="text-white/80">123 Healthcare Ave, Medical City</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
+              <h3 className="text-2xl font-bold text-white mb-6">Start Your Journey Today</h3>
+              <div className="space-y-4">
+                <Link 
+                  to="/register" 
+                  className="block w-full bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-100 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 transform"
+                >
+                  Create Account
+                </Link>
+                <Link 
+                  to="/login" 
+                  className="block w-full border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-indigo-600 transition-all duration-300 text-center hover:scale-105 transform"
+                >
+                  Sign In
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Dynamic CTA Section */}
       <section className="py-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
@@ -836,13 +949,13 @@ const LandingPage: React.FC = () => {
                 </a></li>
               </ul>
             </div>
-          </div>
-          
+            </div>
+            
           <div className="border-t border-gray-700/50 mt-12 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="text-gray-400 mb-4 md:mb-0">
                 <p>&copy; 2024 HealthCare Pro. All rights reserved.</p>
-              </div>
+                </div>
               <div className="flex items-center space-x-6 text-gray-400">
                 <a href="#" className="hover:text-indigo-400 transition-colors duration-200">Privacy Policy</a>
                 <a href="#" className="hover:text-indigo-400 transition-colors duration-200">Terms of Service</a>
