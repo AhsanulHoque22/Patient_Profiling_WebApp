@@ -103,6 +103,30 @@ router.put('/tests/:testId/sample-taken', labTestController.updateToSampleTaken)
 router.post('/lab-orders/cash-payment', labTestController.recordCashPaymentForOrder);
 router.post('/prescription-tests/cash-payment', labTestController.recordCashPaymentForPrescription);
 
+// Unified lab order management routes
+router.get('/unified-lab-orders', labTestController.getAdminUnifiedLabOrders);
+router.post('/unified-orders/:orderId/approve', [
+  body('itemIds')
+    .isArray({ min: 1 })
+    .withMessage('Item IDs array is required'),
+  body('itemIds.*')
+    .isInt({ min: 1 })
+    .withMessage('Each item ID must be a positive integer')
+], labTestController.approveUnifiedOrderItems);
+router.post('/unified-orders/:orderId/start-processing', labTestController.startUnifiedOrderProcessing);
+router.post('/unified-orders/:orderId/cash-payment', [
+  body('amount')
+    .isFloat({ min: 0.01 })
+    .withMessage('Payment amount must be greater than 0'),
+  body('notes')
+    .optional()
+    .isString()
+    .withMessage('Notes must be a string')
+], labTestController.recordUnifiedOrderCashPayment);
+router.post('/unified-orders/:orderId/upload-results', uploadMultiple.array('files', 10), labTestController.uploadUnifiedOrderResults);
+router.post('/unified-orders/:orderId/confirm-reports', labTestController.confirmUnifiedOrderReports);
+router.post('/unified-orders/:orderId/revert-reports', labTestController.revertUnifiedOrderReports);
+
 // Lab test management routes (for admin use)
 router.get('/lab-tests', labTestController.getAllLabTestsForAdmin);
 router.post('/lab-tests', labTestController.createLabTest);

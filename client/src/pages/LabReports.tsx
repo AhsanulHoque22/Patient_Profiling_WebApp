@@ -3,13 +3,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { formatCurrency } from '../services/paymentService';
+import UnifiedTestSelection from '../components/UnifiedTestSelection';
 import { 
   BanknotesIcon,
   ArrowDownTrayIcon,
   ClockIcon,
   CheckCircleIcon,
   PlayIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  CreditCardIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 
 interface LabOrder {
@@ -115,6 +118,7 @@ const LabReports: React.FC = () => {
   const queryClient = useQueryClient();
 
   // State management
+  const [activeTab, setActiveTab] = useState<'unified' | 'individual'>('unified');
   const [statusFilter, setStatusFilter] = useState('');
   const [testTypeFilter, setTestTypeFilter] = useState<'all' | 'prescribed' | 'ordered'>('all');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -496,6 +500,7 @@ const LabReports: React.FC = () => {
             onClick={() => {
               queryClient.invalidateQueries({ queryKey: ['lab-orders'] });
               queryClient.invalidateQueries({ queryKey: ['prescription-lab-tests'] });
+              queryClient.invalidateQueries({ queryKey: ['pending-lab-payments'] });
               toast.success('Data refreshed!');
             }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors"
@@ -506,6 +511,50 @@ const LabReports: React.FC = () => {
             Refresh
           </button>
         </div>
+
+        {/* Tab Navigation */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8 px-6">
+              <button
+                onClick={() => setActiveTab('unified')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'unified'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <CreditCardIcon className="h-5 w-5" />
+                  <span>Unified Payments</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('individual')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'individual'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <DocumentTextIcon className="h-5 w-5" />
+                  <span>Individual Reports</span>
+                </div>
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'unified' && (
+          <div className="mb-6">
+            <UnifiedTestSelection />
+          </div>
+        )}
+
+        {activeTab === 'individual' && (
+          <>
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
@@ -1059,6 +1108,8 @@ const LabReports: React.FC = () => {
               </div>
             </div>
           </div>
+        )}
+          </>
         )}
 
         </div>

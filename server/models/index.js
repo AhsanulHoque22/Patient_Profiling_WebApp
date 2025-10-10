@@ -7,7 +7,11 @@ const Prescription = require('./prescription');
 const DoctorRating = require('./DoctorRating');
 const LabTest = require('./LabTest');
 const LabTestOrder = require('./LabTestOrder');
+const LabTestOrderItem = require('./LabTestOrderItem');
 const LabPayment = require('./LabPayment');
+const LabOrderPayment = require('./LabOrderPayment');
+const LabOrderPaymentAllocation = require('./LabOrderPaymentAllocation');
+const SystemSetting = require('./SystemSetting');
 const BkashPayment = require('./BkashPayment');
 const Medicine = require('./Medicine');
 const MedicineReminder = require('./MedicineReminder');
@@ -74,7 +78,20 @@ LabTestOrder.belongsTo(Appointment, { foreignKey: 'appointmentId', as: 'appointm
 LabTestOrder.belongsTo(User, { foreignKey: 'verified_by', as: 'verifier' });
 LabTestOrder.hasMany(LabPayment, { foreignKey: 'orderId', as: 'payments' });
 
-// Lab Payment associations
+// New unified payment associations
+LabTestOrder.hasMany(LabTestOrderItem, { foreignKey: 'orderId', as: 'orderItems' });
+LabTestOrderItem.belongsTo(LabTestOrder, { foreignKey: 'orderId', as: 'order' });
+LabTestOrderItem.belongsTo(LabTest, { foreignKey: 'labTestId', as: 'labTest' });
+
+Patient.hasMany(LabOrderPayment, { foreignKey: 'patientId', as: 'orderPayments' });
+LabOrderPayment.belongsTo(Patient, { foreignKey: 'patientId', as: 'patient' });
+LabOrderPayment.belongsTo(User, { foreignKey: 'createdBy', as: 'creator' });
+
+LabOrderPayment.hasMany(LabOrderPaymentAllocation, { foreignKey: 'paymentId', as: 'allocations' });
+LabOrderPaymentAllocation.belongsTo(LabOrderPayment, { foreignKey: 'paymentId', as: 'payment' });
+LabOrderPaymentAllocation.belongsTo(LabTestOrderItem, { foreignKey: 'orderItemId', as: 'orderItem' });
+
+// Lab Payment associations (legacy)
 LabPayment.belongsTo(LabTestOrder, { foreignKey: 'orderId', as: 'order' });
 LabPayment.belongsTo(User, { foreignKey: 'processedBy', as: 'processor' });
 
@@ -114,7 +131,11 @@ module.exports = {
   DoctorRating,
   LabTest,
   LabTestOrder,
+  LabTestOrderItem,
   LabPayment,
+  LabOrderPayment,
+  LabOrderPaymentAllocation,
+  SystemSetting,
   BkashPayment,
   Medicine,
   MedicineReminder,

@@ -18,6 +18,7 @@ import {
   UserGroupIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline';
 
 const Layout: React.FC = () => {
@@ -332,6 +333,15 @@ const Layout: React.FC = () => {
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200" />
               <div className="flex items-center gap-x-4 lg:gap-x-6">
+                {/* Home Button */}
+                <button
+                  onClick={() => navigate('/')}
+                  className="group bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+                >
+                  <HomeIcon className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                  <span>Home</span>
+                </button>
+                
                 {/* Notifications */}
                 <NotificationDropdown />
                 

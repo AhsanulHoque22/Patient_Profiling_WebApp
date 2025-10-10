@@ -1,4 +1,17 @@
-const { LabTest, LabTestOrder, LabPayment, Patient, Doctor, User, Appointment, Prescription } = require('../models');
+const { 
+  LabTest, 
+  LabTestOrder, 
+  LabTestOrderItem,
+  LabPayment, 
+  LabOrderPayment,
+  LabOrderPaymentAllocation,
+  Patient, 
+  Doctor, 
+  User, 
+  Appointment, 
+  Prescription,
+  SystemSetting 
+} = require('../models');
 const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 const multer = require('multer');
@@ -121,11 +134,45 @@ const getAllLabTests = async (req, res, next) => {
   }
 };
 
-// Create lab test order
+// Helper function to create order items
+const createOrderItems = async (orderId, testIds, transaction = null) => {
+  const tests = await LabTest.findAll({
+    where: {
+      id: testIds,
+      isActive: true
+    },
+    transaction
+  });
+
+  const orderItems = [];
+  let orderTotal = 0;
+
+  for (const test of tests) {
+    const orderItem = await LabTestOrderItem.create({
+      orderId,
+      labTestId: test.id,
+      testName: test.name,
+      unitPrice: test.price,
+      status: 'ordered',
+      isSelected: true,
+      sampleAllowed: false
+    }, { transaction });
+
+    orderItems.push(orderItem);
+    orderTotal += parseFloat(test.price);
+  }
+
+  return { orderItems, orderTotal };
+};
+
+// Create lab test order with unified payment support
 const createLabTestOrder = async (req, res, next) => {
+  const transaction = await LabTestOrder.sequelize.transaction();
+  
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
         message: 'Validation errors',
@@ -136,30 +183,55 @@ const createLabTestOrder = async (req, res, next) => {
     const { testIds, doctorId, appointmentId, notes } = req.body;
     const patientId = req.user.patientId;
     
-    // Validate test IDs and calculate total amount
+    // Validate test IDs
     const tests = await LabTest.findAll({
-      where: { id: testIds, isActive: true }
+      where: { id: testIds, isActive: true },
+      transaction
     });
     
     if (tests.length !== testIds.length) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
         message: 'Some tests are not available'
       });
     }
     
-    const totalAmount = tests.reduce((sum, test) => sum + parseFloat(test.price), 0);
+    // Get default payment threshold
+    const setting = await SystemSetting.findOne({
+      where: { settingKey: 'lab_payment_threshold_default' },
+      transaction
+    });
+    const defaultThreshold = setting ? parseFloat(setting.settingValue) : 0.5;
     
+    // Create lab test order with new unified payment fields
     const order = await LabTestOrder.create({
       patientId,
       doctorId: doctorId || null,
       appointmentId: appointmentId || null,
-      testIds,
-      totalAmount,
-      dueAmount: totalAmount,
-      notes,
-      status: 'ordered'
-    });
+      testIds, // Keep for backward compatibility
+      totalAmount: 0, // Will be calculated from order items
+      paidAmount: 0,
+      dueAmount: 0,
+      status: 'ordered',
+      paymentThreshold: defaultThreshold,
+      sampleAllowed: false,
+      notes
+    }, { transaction });
+    
+    // Create order items
+    const { orderItems, orderTotal } = await createOrderItems(order.id, testIds, transaction);
+    
+    // Update order with calculated totals
+    await order.update({
+      totalAmount: orderTotal,
+      orderTotal: orderTotal,
+      orderPaid: 0,
+      orderDue: orderTotal,
+      dueAmount: orderTotal
+    }, { transaction });
+    
+    await transaction.commit();
     
     // Include test details in response
     const orderWithTests = await LabTestOrder.findByPk(order.id, {
@@ -172,19 +244,32 @@ const createLabTestOrder = async (req, res, next) => {
           association: 'doctor',
           include: [{ association: 'user', attributes: { exclude: ['password'] } }],
           required: false
+        },
+        {
+          association: 'orderItems',
+          include: [
+            {
+              association: 'labTest',
+              attributes: ['id', 'name', 'description', 'category', 'price']
+            }
+          ]
         }
       ]
     });
     
-    // Add test details
+    // Add test details for backward compatibility
     orderWithTests.dataValues.testDetails = tests;
     
     res.status(201).json({
       success: true,
-      data: { order: orderWithTests },
+      data: { 
+        order: orderWithTests,
+        orderItems 
+      },
       message: 'Lab test order created successfully'
     });
   } catch (error) {
+    await transaction.rollback();
     next(error);
   }
 };
@@ -2839,13 +2924,41 @@ const recordCashPaymentForPrescription = async (req, res, next) => {
     let testPrice = testData.price || 0;
     if (!testPrice) {
       try {
-        const labTest = await LabTest.findOne({
+        // Try multiple lookup strategies for better matching
+        let labTest = await LabTest.findOne({
           where: {
             name: { [Op.like]: `%${testName}%` }
           }
         });
+        
+        // If no exact match, try with cleaned test name
+        if (!labTest) {
+          const cleanedTestName = testName.replace(/\(.*?\)/g, '').trim();
+          labTest = await LabTest.findOne({
+            where: {
+              name: { [Op.like]: `%${cleanedTestName}%` }
+            }
+          });
+        }
+        
+        // If still no match, try with individual words
+        if (!labTest) {
+          const words = testName.split(' ').filter(word => word.length > 2);
+          for (const word of words) {
+            labTest = await LabTest.findOne({
+              where: {
+                name: { [Op.like]: `%${word}%` }
+              }
+            });
+            if (labTest) break;
+          }
+        }
+        
         if (labTest) {
           testPrice = labTest.price;
+          console.log(`Found price for "${testName}": ${testPrice} from "${labTest.name}"`);
+        } else {
+          console.log(`No price found for test: "${testName}"`);
         }
       } catch (e) {
         console.log('Error fetching lab test price:', e.message);
@@ -2920,6 +3033,32 @@ const recordCashPaymentForPrescription = async (req, res, next) => {
     await prescription.update({
       tests: JSON.stringify(tests)
     });
+
+    // Synchronize unified order payments if this test is part of a unified order
+    try {
+      // Find any unified orders that might contain this test
+      const unifiedOrders = await LabTestOrder.findAll({
+        where: {
+          appointmentId: prescription.appointmentId,
+          doctorId: prescription.doctorId,
+          patientId: prescription.patientId
+        },
+        include: [{
+          association: 'orderItems',
+          where: {
+            testName: { [Op.like]: `%${testName}%` }
+          }
+        }]
+      });
+
+      // Synchronize payments for each matching unified order
+      for (const unifiedOrder of unifiedOrders) {
+        await synchronizeUnifiedOrderPayments(unifiedOrder.id);
+      }
+    } catch (syncError) {
+      console.error('Error synchronizing unified order payments:', syncError.message);
+      // Don't fail the main operation if synchronization fails
+    }
 
     res.json({
       success: true,
@@ -3165,4 +3304,1115 @@ module.exports = {
   recordCashPaymentForPrescription,
   getPatientLabReportsForDoctor,
   getPatientPrescriptionLabTestsForDoctor
+};
+
+// Record cash payment for unified order
+const recordUnifiedOrderCashPayment = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const { amount, notes } = req.body;
+
+    const paymentAmount = parseFloat(amount);
+    if (paymentAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment amount must be greater than 0'
+      });
+    }
+
+    const transaction = await LabTestOrder.sequelize.transaction();
+
+    try {
+      const order = await LabTestOrder.findByPk(orderId, {
+        include: [{ association: 'orderItems' }],
+        transaction
+      });
+
+      if (!order) {
+        await transaction.rollback();
+        return res.status(404).json({
+          success: false,
+          message: 'Order not found'
+        });
+      }
+
+      // Calculate actual payment status
+      const paymentStatus = await calculateUnifiedOrderPaymentStatus(order);
+      
+      // Check if payment exceeds remaining amount
+      if (paymentAmount > paymentStatus.dueAmount) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: `Payment amount cannot exceed remaining amount of ${paymentStatus.dueAmount.toFixed(2)}`
+        });
+      }
+
+      console.log(`Recording cash payment for unified order ${orderId}:`, {
+        paymentAmount,
+        currentPaidAmount: paymentStatus.paidAmount,
+        currentDueAmount: paymentStatus.dueAmount,
+        totalAmount: paymentStatus.totalAmount
+      });
+
+      // Update the unified order payment totals
+      const newPaidAmount = paymentStatus.paidAmount + paymentAmount;
+      const newDueAmount = Math.max(0, paymentStatus.totalAmount - newPaidAmount);
+
+      await order.update({
+        orderPaid: newPaidAmount,
+        orderDue: newDueAmount
+      }, { transaction });
+
+      // Record payment in prescription tests for individual test tracking
+      try {
+        const prescription = await Prescription.findOne({
+          where: {
+            appointmentId: order.appointmentId,
+            doctorId: order.doctorId,
+            patientId: order.patientId
+          },
+          transaction
+        });
+
+        if (prescription) {
+          let testsData = [];
+          try {
+            testsData = prescription.tests ? JSON.parse(prescription.tests) : [];
+          } catch (e) {
+            console.log('Error parsing prescription tests for unified payment:', e.message);
+          }
+
+          // Distribute payment across unpaid tests
+          let remainingPayment = paymentAmount;
+          for (const orderItem of order.orderItems) {
+            if (remainingPayment <= 0) break;
+
+            const testName = orderItem.testName;
+            const testIndex = testsData.findIndex(test => {
+              const testNameToMatch = test.name || test;
+              return testNameToMatch.toLowerCase().includes(testName.toLowerCase()) ||
+                     testName.toLowerCase().includes(testNameToMatch.toLowerCase());
+            });
+
+            if (testIndex !== -1) {
+              const test = testsData[testIndex];
+              const testPrice = test.price || orderItem.unitPrice || 0;
+              const currentPaidAmount = test.payments ? test.payments.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0) : 0;
+              const testDueAmount = Math.max(0, testPrice - currentPaidAmount);
+              
+              if (testDueAmount > 0) {
+                const paymentForThisTest = Math.min(remainingPayment, testDueAmount);
+                
+                // Initialize payments array if it doesn't exist
+                if (!test.payments) test.payments = [];
+                
+                // Add payment record
+                test.payments.push({
+                  amount: paymentForThisTest,
+                  method: 'cash',
+                  recordedBy: req.user.id,
+                  recordedAt: new Date().toISOString(),
+                  notes: notes || 'Unified order cash payment'
+                });
+
+                remainingPayment -= paymentForThisTest;
+                testsData[testIndex] = test;
+              }
+            }
+          }
+
+          // Update prescription with modified test data
+          await prescription.update({
+            tests: JSON.stringify(testsData)
+          }, { transaction });
+        }
+      } catch (prescriptionError) {
+        console.error('Error updating prescription payments:', prescriptionError.message);
+        // Don't fail the main operation if prescription update fails
+      }
+
+      await transaction.commit();
+
+      res.json({
+        success: true,
+        message: 'Cash payment recorded successfully',
+        data: {
+          orderId,
+          paymentAmount,
+          newPaidAmount,
+          newDueAmount,
+          paymentStatus: newPaidAmount >= paymentStatus.totalAmount ? 'paid' : 'partially_paid'
+        }
+      });
+
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Upload results for unified order
+const uploadUnifiedOrderResults = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const files = req.files;
+    const notes = req.body.notes;
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No files uploaded'
+      });
+    }
+
+    const transaction = await LabTestOrder.sequelize.transaction();
+
+    try {
+      const order = await LabTestOrder.findByPk(orderId, { transaction });
+
+      if (!order) {
+        await transaction.rollback();
+        return res.status(404).json({
+          success: false,
+          message: 'Order not found'
+        });
+      }
+
+      // Check if full payment is made
+      const paymentStatus = await calculateUnifiedOrderPaymentStatus(order);
+      if (paymentStatus.paidAmount < paymentStatus.totalAmount) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: 'Full payment required to upload results'
+        });
+      }
+
+      // Process uploaded files
+      const uploadedFiles = [];
+      for (const file of files) {
+        const fileData = {
+          filename: file.filename,
+          originalName: file.originalname,
+          path: file.path,
+          size: file.size,
+          mimetype: file.mimetype,
+          uploadedAt: new Date(),
+          uploadedBy: req.user.id,
+          notes: notes || ''
+        };
+        uploadedFiles.push(fileData);
+      }
+
+      // Update order with uploaded results
+      await order.update({
+        status: 'results_ready',
+        testReports: JSON.stringify(uploadedFiles),
+        resultUrl: uploadedFiles.length > 0 ? uploadedFiles[0].path : null
+      }, { transaction });
+
+      // Update individual order items status
+      await LabTestOrderItem.update(
+        { status: 'results_ready' },
+        { 
+          where: { order_id: orderId },
+          transaction 
+        }
+      );
+
+      await transaction.commit();
+
+      res.json({
+        success: true,
+        message: 'Results uploaded successfully',
+        data: {
+          orderId,
+          filesUploaded: uploadedFiles.length,
+          status: 'results_ready'
+        }
+      });
+
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Confirm unified order reports
+const confirmUnifiedOrderReports = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+
+    const transaction = await LabTestOrder.sequelize.transaction();
+
+    try {
+      const order = await LabTestOrder.findByPk(orderId, { transaction });
+
+      if (!order) {
+        await transaction.rollback();
+        return res.status(404).json({
+          success: false,
+          message: 'Order not found'
+        });
+      }
+
+      if (order.status !== 'results_ready') {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: 'Order must be in results_ready status to confirm'
+        });
+      }
+
+      // Update order status to completed
+      await order.update({
+        status: 'completed'
+      }, { transaction });
+
+      // Update individual order items status
+      await LabTestOrderItem.update(
+        { status: 'completed' },
+        { 
+          where: { order_id: orderId },
+          transaction 
+        }
+      );
+
+      await transaction.commit();
+
+      res.json({
+        success: true,
+        message: 'Reports confirmed successfully',
+        data: {
+          orderId,
+          status: 'completed'
+        }
+      });
+
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Revert unified order reports
+const revertUnifiedOrderReports = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+
+    const transaction = await LabTestOrder.sequelize.transaction();
+
+    try {
+      const order = await LabTestOrder.findByPk(orderId, { transaction });
+
+      if (!order) {
+        await transaction.rollback();
+        return res.status(404).json({
+          success: false,
+          message: 'Order not found'
+        });
+      }
+
+      if (!['results_ready', 'completed'].includes(order.status)) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: 'Order must have results to revert'
+        });
+      }
+
+      // Revert order status to processing
+      await order.update({
+        status: 'processing',
+        testReports: null,
+        resultUrl: null
+      }, { transaction });
+
+      // Update individual order items status
+      await LabTestOrderItem.update(
+        { status: 'processing' },
+        { 
+          where: { order_id: orderId },
+          transaction 
+        }
+      );
+
+      await transaction.commit();
+
+      res.json({
+        success: true,
+        message: 'Reports reverted successfully',
+        data: {
+          orderId,
+          status: 'processing'
+        }
+      });
+
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Function to synchronize unified order payments with prescription payments
+const synchronizeUnifiedOrderPayments = async (orderId) => {
+  try {
+    const order = await LabTestOrder.findByPk(orderId, {
+      include: [{ association: 'orderItems' }]
+    });
+
+    if (!order) {
+      console.log(`Order ${orderId} not found for synchronization`);
+      return false;
+    }
+
+    // Calculate actual payment status
+    const paymentStatus = await calculateUnifiedOrderPaymentStatus(order);
+    
+    // Update the unified order with actual payment data
+    await order.update({
+      orderTotal: paymentStatus.totalAmount,
+      orderPaid: paymentStatus.paidAmount,
+      orderDue: paymentStatus.dueAmount
+    });
+
+    console.log(`Synchronized order ${orderId} payments:`, {
+      totalAmount: paymentStatus.totalAmount,
+      paidAmount: paymentStatus.paidAmount,
+      dueAmount: paymentStatus.dueAmount,
+      paymentStatus: paymentStatus.paymentStatus
+    });
+
+    return true;
+  } catch (error) {
+    console.error(`Error synchronizing order ${orderId} payments:`, error.message);
+    return false;
+  }
+};
+
+// Get prescription lab tests for unified selection
+const getPrescriptionLabTestsForUnifiedSelection = async (req, res, next) => {
+  try {
+    const patientId = req.user.patientId;
+    
+    // Get prescriptions with lab tests for this patient
+    const prescriptions = await Prescription.findAll({
+      where: {
+        patientId,
+        tests: { [Op.ne]: null },
+        [Op.or]: [
+          { tests: { [Op.ne]: '' } },
+          { tests: { [Op.ne]: '[]' } }
+        ]
+      },
+      include: [
+        {
+          model: Appointment,
+          as: 'appointment',
+          include: [
+            {
+              model: Doctor,
+              as: 'doctor',
+              include: [{ model: User, as: 'user', attributes: ['firstName', 'lastName'] }]
+            }
+          ]
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+    
+    // Process prescriptions to extract lab tests with prescription context
+    const prescriptionTests = [];
+    
+    for (const prescription of prescriptions) {
+      try {
+        let testsData = [];
+        
+        // Parse tests from prescription
+        if (prescription.tests) {
+          try {
+            let cleanTests = prescription.tests.trim();
+            
+            if (!cleanTests.startsWith('[') && !cleanTests.startsWith('{')) {
+              throw new Error('Plain text format detected');
+            }
+            
+            cleanTests = cleanTests.replace(/^[•\*\-\s]+/, '');
+            testsData = JSON.parse(cleanTests);
+          } catch (e) {
+            // If not JSON, treat as string
+            testsData = prescription.tests.split('\n').filter(test => test.trim());
+            testsData = testsData.map(test => {
+              const cleanName = test.replace(/^[•\*\-\s]+/, '').trim();
+              return { name: cleanName, description: '', status: 'ordered', testReports: [] };
+            });
+          }
+        }
+        
+        // Add each test with prescription context
+        for (const test of testsData) {
+          const testName = test.name || test;
+          let testPrice = test.price || 0;
+          let testDescription = test.description || '';
+          
+          // Try to get price from lab test database
+          let actualLabTestId = null;
+          if (!testPrice) {
+            try {
+              let labTest = await LabTest.findOne({
+                where: {
+                  name: { [Op.like]: `%${testName}%` }
+                }
+              });
+              
+              if (!labTest) {
+                labTest = await LabTest.findOne({
+                  where: {
+                    name: { [Op.like]: `%${testName.replace(/\(.*?\)/g, '').trim()}%` }
+                  }
+                });
+              }
+              
+              if (labTest) {
+                testPrice = labTest.price || 0;
+                testDescription = testDescription || labTest.description || '';
+                actualLabTestId = labTest.id; // Store the lab test ID
+                console.log(`Found lab test ID ${actualLabTestId} for "${testName}"`);
+              }
+            } catch (error) {
+              console.error('Error looking up lab test price:', error);
+            }
+          } else {
+            // If testPrice is already set, we still need to find the lab test ID
+            try {
+              let labTest = await LabTest.findOne({
+                where: {
+                  name: { [Op.like]: `%${testName}%` }
+                }
+              });
+              
+              if (!labTest) {
+                labTest = await LabTest.findOne({
+                  where: {
+                    name: { [Op.like]: `%${testName.replace(/\(.*?\)/g, '').trim()}%` }
+                  }
+                });
+              }
+              
+              if (labTest) {
+                actualLabTestId = labTest.id;
+                console.log(`Found lab test ID ${actualLabTestId} for "${testName}" (price already set)`);
+              }
+            } catch (error) {
+              console.error('Error looking up lab test ID:', error);
+            }
+          }
+          
+          // Calculate payment amounts
+          const totalAmount = parseFloat(testPrice);
+          const paidAmount = test.payments ? test.payments.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0) : 0;
+          const dueAmount = Math.max(0, totalAmount - paidAmount);
+          
+          // Determine payment status
+          let paymentStatus = 'not_paid';
+          if (paidAmount >= totalAmount) {
+            paymentStatus = 'paid';
+          } else if (paidAmount > 0 && paidAmount < totalAmount) {
+            paymentStatus = 'partially_paid';
+          }
+          
+          // Create test object for status determination
+          const testForStatus = {
+            ...test,
+            price: testPrice,
+            payments: test.payments || [],
+            testReports: test.testReports || []
+          };
+          
+          // Determine test processing status
+          const testProcessingStatus = determineAutomaticStatus(testForStatus);
+          
+          // Only include tests that meet the criteria for unified selection:
+          // Status: ordered or approved
+          // Payment status: not_paid or partially_paid
+          if (
+            (testProcessingStatus === 'ordered' || testProcessingStatus === 'approved') &&
+            (paymentStatus === 'not_paid' || paymentStatus === 'partially_paid')
+          ) {
+
+          prescriptionTests.push({
+            id: `prescription-${prescription.id}-${testName.replace(/\s+/g, '-').toLowerCase()}`,
+            name: testName,
+            description: testDescription || `Prescribed by Dr. ${prescription.appointment.doctor.user.firstName} ${prescription.appointment.doctor.user.lastName}`,
+            category: prescription.appointment.doctor.department || 'Prescription',
+            price: testPrice,
+            sampleType: 'Blood', // Default
+            preparationInstructions: 'Follow doctor\'s instructions',
+            reportDeliveryTime: 24,
+            // Status information
+            status: testProcessingStatus,
+            paymentStatus: paymentStatus,
+            paidAmount: paidAmount,
+            dueAmount: dueAmount,
+            // Prescription context
+            prescriptionId: prescription.id,
+            appointmentId: prescription.appointmentId,
+            doctorId: prescription.doctorId,
+            doctorName: `${prescription.appointment.doctor.user.firstName} ${prescription.appointment.doctor.user.lastName}`,
+            doctorDepartment: prescription.appointment.doctor.department,
+            appointmentDate: prescription.appointment.appointmentDate,
+            prescriptionDate: prescription.createdAt,
+            originalTest: test,
+            // Lab test ID for unified order creation
+            labTestId: actualLabTestId
+          });
+          
+          console.log(`Added prescription test "${testName}" with labTestId: ${actualLabTestId}`);
+          }
+        }
+      } catch (error) {
+        console.error(`Error processing prescription ${prescription.id}:`, error);
+      }
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        tests: prescriptionTests,
+        total: prescriptionTests.length
+      }
+    });
+    
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get unified lab orders for admin
+// Helper function to calculate actual payment status for unified orders
+const calculateUnifiedOrderPaymentStatus = async (order) => {
+  try {
+    // Get the prescription associated with this order
+    const prescription = await Prescription.findOne({
+      where: {
+        appointmentId: order.appointmentId,
+        doctorId: order.doctorId,
+        patientId: order.patientId
+      }
+    });
+
+    if (!prescription) {
+      console.log(`No prescription found for order ${order.id}`);
+      return {
+        totalAmount: order.orderTotal || 0,
+        paidAmount: order.orderPaid || 0,
+        dueAmount: (order.orderTotal || 0) - (order.orderPaid || 0),
+        paymentStatus: order.orderPaid >= (order.orderTotal || 0) ? 'paid' : 'pending'
+      };
+    }
+
+    let testsData = [];
+    try {
+      testsData = prescription.tests ? JSON.parse(prescription.tests) : [];
+    } catch (e) {
+      console.log(`Error parsing prescription tests for order ${order.id}:`, e.message);
+      return {
+        totalAmount: order.orderTotal || 0,
+        paidAmount: order.orderPaid || 0,
+        dueAmount: (order.orderTotal || 0) - (order.orderPaid || 0),
+        paymentStatus: order.orderPaid >= (order.orderTotal || 0) ? 'paid' : 'pending'
+      };
+    }
+
+    // Calculate actual payments from prescription tests
+    let actualTotalAmount = 0;
+    let actualPaidAmount = 0;
+
+    // Match order items with prescription tests
+    for (const orderItem of order.orderItems) {
+      const testName = orderItem.testName;
+      const testPrice = orderItem.unitPrice || 0;
+      
+      // Find matching test in prescription
+      const prescriptionTest = testsData.find(test => {
+        const testNameToMatch = test.name || test;
+        return testNameToMatch.toLowerCase().includes(testName.toLowerCase()) ||
+               testName.toLowerCase().includes(testNameToMatch.toLowerCase());
+      });
+
+      if (prescriptionTest) {
+        actualTotalAmount += testPrice;
+        
+        // Calculate paid amount from prescription test payments
+        if (prescriptionTest.payments && Array.isArray(prescriptionTest.payments)) {
+          const testPaidAmount = prescriptionTest.payments.reduce((sum, payment) => {
+            return sum + parseFloat(payment.amount || 0);
+          }, 0);
+          actualPaidAmount += testPaidAmount;
+        }
+      } else {
+        // If no matching prescription test found, use order item data
+        actualTotalAmount += testPrice;
+        actualPaidAmount += 0; // No individual payment recorded
+      }
+    }
+
+    const actualDueAmount = Math.max(0, actualTotalAmount - actualPaidAmount);
+    const paymentStatus = actualPaidAmount >= actualTotalAmount ? 'paid' : 
+                         actualPaidAmount > 0 ? 'partially_paid' : 'not_paid';
+
+    console.log(`Order ${order.id} payment calculation:`, {
+      orderTotal: order.orderTotal,
+      orderPaid: order.orderPaid,
+      actualTotalAmount,
+      actualPaidAmount,
+      actualDueAmount,
+      paymentStatus
+    });
+
+    return {
+      totalAmount: actualTotalAmount,
+      paidAmount: actualPaidAmount,
+      dueAmount: actualDueAmount,
+      paymentStatus
+    };
+
+  } catch (error) {
+    console.error(`Error calculating payment status for order ${order.id}:`, error.message);
+    return {
+      totalAmount: order.orderTotal || 0,
+      paidAmount: order.orderPaid || 0,
+      dueAmount: (order.orderTotal || 0) - (order.orderPaid || 0),
+      paymentStatus: order.orderPaid >= (order.orderTotal || 0) ? 'paid' : 'pending'
+    };
+  }
+};
+
+const getAdminUnifiedLabOrders = async (req, res, next) => {
+  try {
+    const { status, page = 1, limit = 10 } = req.query;
+    
+    const whereClause = {};
+    if (status) {
+      whereClause.status = status;
+    }
+
+    const { count, rows: orders } = await LabTestOrder.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          association: 'patient',
+          include: [{ association: 'user', attributes: { exclude: ['password'] } }]
+        },
+        {
+          association: 'orderItems',
+          include: [
+            {
+              association: 'labTest',
+              attributes: ['id', 'name', 'description', 'category', 'price']
+            }
+          ]
+        }
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit)
+    });
+
+    // Calculate actual payment status for each order
+    const ordersWithActualPayments = await Promise.all(
+      orders.map(async (order) => {
+        const paymentStatus = await calculateUnifiedOrderPaymentStatus(order);
+        
+        return {
+          ...order.toJSON(),
+          // Override payment fields with actual calculated values
+          orderTotal: paymentStatus.totalAmount,
+          orderPaid: paymentStatus.paidAmount,
+          orderDue: paymentStatus.dueAmount,
+          paymentStatus: paymentStatus.paymentStatus,
+          // Keep original values for reference
+          originalOrderTotal: order.orderTotal,
+          originalOrderPaid: order.orderPaid,
+          originalOrderDue: order.orderDue
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: {
+        orders: ordersWithActualPayments,
+        pagination: {
+          total: count,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          totalPages: Math.ceil(count / parseInt(limit))
+        }
+      }
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Approve unified order items
+const approveUnifiedOrderItems = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const { itemIds } = req.body;
+
+    if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Item IDs array is required'
+      });
+    }
+
+    const transaction = await LabTestOrderItem.sequelize.transaction();
+
+    try {
+      // Update order items status to approved
+      await LabTestOrderItem.update(
+        { status: 'approved' },
+        {
+          where: {
+            id: itemIds,
+            orderId: orderId,
+            status: 'ordered'
+          },
+          transaction
+        }
+      );
+
+      // Update main order status to approved if all items are approved
+      const order = await LabTestOrder.findByPk(orderId, {
+        include: [{ association: 'orderItems' }],
+        transaction
+      });
+
+      if (!order) {
+        await transaction.rollback();
+        return res.status(404).json({
+          success: false,
+          message: 'Order not found'
+        });
+      }
+
+      const allItemsApproved = order.orderItems.every(item => 
+        item.status === 'approved' || item.status === 'cancelled_by_patient'
+      );
+
+      if (allItemsApproved) {
+        await order.update({ status: 'verified' }, { transaction });
+      }
+
+      await transaction.commit();
+
+      res.json({
+        success: true,
+        message: 'Order items approved successfully'
+      });
+
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Start processing unified order (50% payment threshold)
+const startUnifiedOrderProcessing = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+
+    const transaction = await LabTestOrder.sequelize.transaction();
+
+    try {
+      const order = await LabTestOrder.findByPk(orderId, {
+        include: [{ association: 'orderItems' }],
+        transaction
+      });
+
+      if (!order) {
+        await transaction.rollback();
+        return res.status(404).json({
+          success: false,
+          message: 'Order not found'
+        });
+      }
+
+      // Check if order is approved
+      if (order.status !== 'verified') {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: 'Order must be verified before processing'
+        });
+      }
+
+      // Calculate actual payment status
+      const paymentStatus = await calculateUnifiedOrderPaymentStatus(order);
+      
+         // Check 50% payment threshold using actual payment data
+         const paymentThreshold = paymentStatus.paidAmount >= (paymentStatus.totalAmount * 0.5);
+         if (!paymentThreshold) {
+           await transaction.rollback();
+           return res.status(400).json({
+             success: false,
+             message: `Payment threshold of 50% not met. Paid: ${paymentStatus.paidAmount.toFixed(2)}, Required: ${(paymentStatus.totalAmount * 0.5).toFixed(2)}`
+           });
+         }
+
+      // Generate sample ID
+      const sampleId = `SMP-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+      // Update order status and generate sample ID
+      await order.update({
+        status: 'sample_processing',
+        sampleId: sampleId
+      }, { transaction });
+
+      // Update order items status to sample_processing
+      await LabTestOrderItem.update(
+        { 
+          status: 'sample_processing',
+          sampleAllowed: true
+        },
+        {
+          where: {
+            orderId: orderId,
+            status: 'approved'
+          },
+          transaction
+        }
+      );
+
+      await transaction.commit();
+
+      res.json({
+        success: true,
+        message: 'Sample processing started successfully',
+        data: {
+          sampleId,
+          orderStatus: 'sample_processing'
+        }
+      });
+
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Create unified lab test order
+const createUnifiedLabTestOrder = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation errors',
+        errors: errors.array()
+      });
+    }
+
+    const { testIds, notes, doctorId, appointmentId } = req.body;
+    const patientId = req.user.patientId;
+
+    if (!testIds || !Array.isArray(testIds) || testIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Test IDs array is required'
+      });
+    }
+
+    const transaction = await LabTestOrder.sequelize.transaction();
+
+    try {
+      // Validate test IDs
+      const tests = await LabTest.findAll({
+        where: { id: testIds, isActive: true },
+        transaction
+      });
+
+      if (tests.length !== testIds.length) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: 'Some tests are not available'
+        });
+      }
+
+      // Calculate total amount
+      const totalAmount = tests.reduce((sum, test) => sum + parseFloat(test.price), 0);
+
+      // Generate unique order number and barcode
+      const orderNumber = `UNI-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      const barcode = `${Date.now()}${Math.random().toString(36).substr(2, 8)}`;
+
+      // Create unified lab test order
+      const order = await LabTestOrder.create({
+        patientId,
+        testIds, // Store as JSON for backward compatibility
+        totalAmount,
+        paidAmount: 0,
+        dueAmount: totalAmount,
+        status: 'ordered', // Start as ordered, needs admin approval
+        paymentStatus: 'not_paid',
+        notes: notes || 'Unified lab test order',
+        orderNumber,
+        barcode,
+        // New unified payment fields
+        orderTotal: totalAmount,
+        orderPaid: 0,
+        orderDue: totalAmount,
+        paymentThreshold: 0.5, // 50% threshold
+        sampleAllowed: false
+      }, { transaction });
+
+      // Create order items for the new system
+      for (const test of tests) {
+        await LabTestOrderItem.create({
+          orderId: order.id,
+          labTestId: test.id,
+          testName: test.name,
+          unitPrice: test.price,
+          status: 'ordered',
+          isSelected: true,
+          sampleAllowed: false
+        }, { transaction });
+      }
+
+      await transaction.commit();
+
+      // Fetch the created order with all details
+      const orderWithDetails = await LabTestOrder.findByPk(order.id, {
+        include: [
+          {
+            association: 'patient',
+            include: [{ association: 'user', attributes: { exclude: ['password'] } }]
+          },
+          {
+            association: 'orderItems',
+            include: [
+              {
+                association: 'labTest',
+                attributes: ['id', 'name', 'description', 'category', 'price']
+              }
+            ]
+          }
+        ]
+      });
+
+      res.status(201).json({
+        success: true,
+        data: { 
+          order: orderWithDetails,
+          barcode,
+          orderNumber
+        },
+        message: 'Unified lab test order created successfully'
+      });
+
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  // Lab test catalog
+  getAllLabTests,
+  getLabTestCategories,
+  createLabTest,
+  updateLabTest,
+  deleteLabTest,
+  getAllLabTestsForAdmin,
+  
+  // Lab test orders
+  createLabTestOrder,
+  createUnifiedLabTestOrder,
+  getPatientLabOrders,
+  getAllLabOrders,
+  getAdminUnifiedLabOrders,
+  updateOrderStatus,
+  makePayment,
+  processOfflinePayment,
+  
+  // Unified order management
+  approveUnifiedOrderItems,
+  startUnifiedOrderProcessing,
+  
+  // Lab test results
+  uploadLabResults,
+  removeLabOrderReport,
+  confirmLabOrderReports,
+  revertLabOrderReports,
+  
+  // Prescription lab tests
+  getPatientPrescriptionLabTests,
+  getAllPrescriptionLabTests,
+  approvePrescriptionLabTest,
+  updatePrescriptionLabTestStatus,
+  uploadPrescriptionLabResults,
+  processPrescriptionLabPayment,
+  removePrescriptionLabTestReport,
+  confirmPrescriptionLabTestReports,
+  revertPrescriptionLabTestReports,
+  
+  // Payment processing
+  processPayment,
+  updateToSampleProcessing,
+  updateToSampleTaken,
+  recordCashPaymentForOrder,
+  recordCashPaymentForPrescription,
+  
+  // Doctor access
+  getPatientLabReportsForDoctor,
+  getPatientPrescriptionLabTestsForDoctor,
+
+  // Prescription tests for unified selection
+  getPrescriptionLabTestsForUnifiedSelection,
+
+  // Payment synchronization
+  synchronizeUnifiedOrderPayments,
+  calculateUnifiedOrderPaymentStatus,
+
+  // Unified order cash payment
+  recordUnifiedOrderCashPayment,
+
+  // Unified order results management
+  uploadUnifiedOrderResults,
+  confirmUnifiedOrderReports,
+  revertUnifiedOrderReports
 };

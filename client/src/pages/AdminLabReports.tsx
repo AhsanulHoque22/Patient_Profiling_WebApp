@@ -4,6 +4,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'react-router-dom';
 import { formatCurrency } from '../services/paymentService';
+import AdminUnifiedOrderManagement from '../components/AdminUnifiedOrderManagement';
 import { 
   BeakerIcon,
   DocumentTextIcon,
@@ -17,7 +18,8 @@ import {
   BanknotesIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
-  CalendarIcon
+  CalendarIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 
 interface LabTest {
@@ -147,8 +149,9 @@ const AdminLabReports: React.FC = () => {
   const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
   const [selectedTestForPaymentHistory, setSelectedTestForPaymentHistory] = useState<any>(null);
 
+
   // Tab and section states
-  const [activeTab, setActiveTab] = useState('pending');
+  const [activeTab, setActiveTab] = useState('unified');
   const [sectionSearchTerms, setSectionSearchTerms] = useState({
     pending: '',
     inProgress: '',
@@ -1513,29 +1516,72 @@ const AdminLabReports: React.FC = () => {
             </p>
           </div>
           <button
-            onClick={handleManualRefresh}
-            disabled={isRefreshing}
-            className={`px-3 py-1 text-white rounded-md text-sm flex items-center space-x-2 ${
-              isRefreshing 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            {isRefreshing ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Refreshing...</span>
-              </>
-            ) : (
-              <>
-                <span>🔄</span>
-                <span>Refresh Data</span>
-              </>
-            )}
-          </button>
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className={`px-3 py-1 text-white rounded-md text-sm flex items-center space-x-2 ${
+                isRefreshing 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
+            >
+              {isRefreshing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Refreshing...</span>
+                </>
+              ) : (
+                <>
+                  <span>🔄</span>
+                  <span>Refresh Data</span>
+                </>
+              )}
+            </button>
         </div>
       </div>
 
+      {/* Tab Navigation */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8 px-6">
+            <button
+              onClick={() => setActiveTab('unified')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'unified'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <BeakerIcon className="h-5 w-5" />
+                <span>Unified Orders</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'pending'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <ClockIcon className="h-5 w-5" />
+                <span>Individual Reports</span>
+              </div>
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'unified' && (
+        <div className="mb-6">
+          <AdminUnifiedOrderManagement />
+        </div>
+      )}
+
+      {activeTab === 'pending' && (
+        <>
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
@@ -2518,6 +2564,10 @@ const AdminLabReports: React.FC = () => {
           </div>
         </div>
       )}
+
+        </>
+      )}
+
     </div>
   );
 };

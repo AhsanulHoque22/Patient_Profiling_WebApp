@@ -13,6 +13,8 @@ import {
   ClockIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
+  HomeIcon,
+  HeartIcon
 } from '@heroicons/react/24/outline';
 
 interface DashboardStats {

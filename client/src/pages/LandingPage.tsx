@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { 
   HeartIcon,
   UserGroupIcon,
@@ -26,6 +27,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const LandingPage: React.FC = () => {
+  const { user, loading } = useAuth();
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -151,6 +153,17 @@ const LandingPage: React.FC = () => {
     };
   }, []);
 
+  // Show loading spinner while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  // For authenticated users, show a personalized landing page instead of redirecting
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -208,18 +221,36 @@ const LandingPage: React.FC = () => {
               </button>
             </div>
             <div className="flex items-center space-x-4">
-              <Link 
-                to="/login" 
-                className="text-gray-600 hover:text-indigo-600 transition-colors duration-200 font-medium"
-              >
-                Sign In
-              </Link>
-              <Link 
-                to="/register" 
-                className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform font-semibold"
-              >
-                Get Started
-              </Link>
+              {user ? (
+                <>
+                  <span className="text-gray-600 font-medium">
+                    Welcome back, {user.firstName}!
+                  </span>
+                  <Link 
+                    to={user.role === 'patient' ? '/app/dashboard' : 
+                        user.role === 'doctor' ? '/app/doctor-dashboard' : 
+                        '/app/admin-dashboard'} 
+                    className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform font-semibold"
+                  >
+                    Go to Dashboard
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link 
+                    to="/login" 
+                    className="text-gray-600 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                  >
+                    Sign In
+                  </Link>
+                  <Link 
+                    to="/register" 
+                    className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform font-semibold"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -230,30 +261,69 @@ const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className={`transition-all duration-1000 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
-              <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full text-sm font-medium text-indigo-700 mb-6 animate-pulse">
-                <SparklesIcon className="h-4 w-4 mr-2" />
-                Trusted by 10,000+ Healthcare Professionals
-              </div>
-              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 leading-tight">
-                Your Health,
-                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent animate-pulse"> Simplified</span>
+              {user ? (
+                <>
+                  <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full text-sm font-medium text-green-700 mb-6 animate-pulse">
+                    <SparklesIcon className="h-4 w-4 mr-2" />
+                    Welcome back to HealthCare Pro!
+                  </div>
+                  <h1 className="text-4xl md:text-6xl font-bold text-gray-900 leading-tight">
+                Hello {user.firstName}!
+                <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent animate-pulse block mt-2">Ready to continue your healthcare journey?</span>
               </h1>
-              <p className="text-xl text-gray-600 mt-6 leading-relaxed">
-                Connect with trusted doctors, manage your appointments, track your health records, 
-                and access lab results - all in one comprehensive healthcare platform.
+                  <p className="text-xl text-gray-600 mt-6 leading-relaxed">
+                Access your dashboard, manage appointments, view your health records, 
+                and stay connected with your healthcare providers.
               </p>
+                </>
+              ) : (
+                <>
+                  <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full text-sm font-medium text-indigo-700 mb-6 animate-pulse">
+                    <SparklesIcon className="h-4 w-4 mr-2" />
+                    Trusted by 10,000+ Healthcare Professionals
+                  </div>
+                  <h1 className="text-4xl md:text-6xl font-bold text-gray-900 leading-tight">
+                    Your Health,
+                    <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent animate-pulse"> Simplified</span>
+                  </h1>
+                  <p className="text-xl text-gray-600 mt-6 leading-relaxed">
+                    Connect with trusted doctors, manage your appointments, track your health records, 
+                    and access lab results - all in one comprehensive healthcare platform.
+                  </p>
+                </>
+              )}
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                <Link 
-                  to="/register" 
-                  className="group bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transform"
-                >
-                  Start Your Journey
-                  <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                </Link>
-                <button className="group border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-indigo-50 transition-all duration-300 flex items-center justify-center hover:scale-105 transform">
-                  <PlayIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-                  Watch Demo
-                </button>
+                {user ? (
+                  <>
+                    <Link 
+                      to={user.role === 'patient' ? '/app/dashboard' : 
+                          user.role === 'doctor' ? '/app/doctor-dashboard' : 
+                          '/app/admin-dashboard'} 
+                      className="group bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transform"
+                    >
+                      Go to Dashboard
+                      <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                    </Link>
+                    <button className="group border-2 border-green-600 text-green-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-green-50 transition-all duration-300 flex items-center justify-center hover:scale-105 transform">
+                      <PlayIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                      Explore Features
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link 
+                      to="/register" 
+                      className="group bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transform"
+                    >
+                      Start Your Journey
+                      <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                    </Link>
+                    <button className="group border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-indigo-50 transition-all duration-300 flex items-center justify-center hover:scale-105 transform">
+                      <PlayIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                      Watch Demo
+                    </button>
+                  </>
+                )}
               </div>
               <div className="mt-8 flex flex-wrap items-center gap-6">
                 <div className="flex items-center group">
@@ -378,75 +448,159 @@ const LandingPage: React.FC = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
-            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 w-fit mb-6 group-hover:scale-110 transition-transform duration-200">
-                <CalendarIcon className="h-8 w-8 text-white" />
+            <div className="group relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 hover:shadow-2xl transition-all duration-500 hover:scale-105 border border-white/30 hover:border-white/50 overflow-hidden">
+              {/* Dynamic background effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-blue-600/20 rounded-full blur-xl group-hover:scale-150 transition-all duration-700"></div>
+              <div className="absolute -bottom-10 -left-10 w-16 h-16 bg-gradient-to-tr from-indigo-400/20 to-blue-500/20 rounded-full blur-lg group-hover:scale-125 transition-all duration-700"></div>
+              
+              <div className="relative z-10">
+                <div className="relative mb-8">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-2xl blur-md group-hover:blur-lg transition-all duration-300"></div>
+                  <div className="relative bg-gradient-to-r from-blue-500/80 to-blue-600/80 backdrop-blur-sm rounded-2xl p-6 group-hover:scale-110 group-hover:rotate-1 transition-all duration-500 border border-white/20">
+                    <img 
+                      src="https://images.unsplash.com/photo-1516549655169-df83a0774514?w=200&h=200&fit=crop&crop=center" 
+                      alt="Appointment booking" 
+                      className="h-16 w-16 rounded-xl object-cover shadow-lg group-hover:shadow-xl transition-all duration-300"
+                    />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">Easy Appointment Booking</h3>
+                <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors">
+                  Book appointments with verified doctors in real-time. Choose your preferred time slot 
+                  and get instant confirmation.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">Easy Appointment Booking</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Book appointments with verified doctors in real-time. Choose your preferred time slot 
-                and get instant confirmation.
-              </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50">
-              <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 w-fit mb-6 group-hover:scale-110 transition-transform duration-200">
-                <DocumentTextIcon className="h-8 w-8 text-white" />
+            <div className="group relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 hover:shadow-2xl transition-all duration-500 hover:scale-105 border border-white/30 hover:border-white/50 overflow-hidden">
+              {/* Dynamic background effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-transparent to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-green-400/20 to-green-600/20 rounded-full blur-xl group-hover:scale-150 transition-all duration-700"></div>
+              <div className="absolute -bottom-10 -left-10 w-16 h-16 bg-gradient-to-tr from-emerald-400/20 to-green-500/20 rounded-full blur-lg group-hover:scale-125 transition-all duration-700"></div>
+              
+              <div className="relative z-10">
+                <div className="relative mb-8">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-green-600/20 rounded-2xl blur-md group-hover:blur-lg transition-all duration-300"></div>
+                  <div className="relative bg-gradient-to-r from-green-500/80 to-green-600/80 backdrop-blur-sm rounded-2xl p-6 group-hover:scale-110 group-hover:rotate-1 transition-all duration-500 border border-white/20">
+                    <img 
+                      src="https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=200&h=200&fit=crop&crop=center" 
+                      alt="Digital health records" 
+                      className="h-16 w-16 rounded-xl object-cover shadow-lg group-hover:shadow-xl transition-all duration-300"
+                    />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-green-600 transition-colors">Digital Health Records</h3>
+                <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors">
+                  Access your complete medical history, prescriptions, and test results 
+                  securely stored in one place.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-green-600 transition-colors">Digital Health Records</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Access your complete medical history, prescriptions, and test results 
-                securely stored in one place.
-              </p>
             </div>
 
             {/* Feature 3 */}
-            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50">
-              <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 w-fit mb-6 group-hover:scale-110 transition-transform duration-200">
-                <BeakerIcon className="h-8 w-8 text-white" />
+            <div className="group relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 hover:shadow-2xl transition-all duration-500 hover:scale-105 border border-white/30 hover:border-white/50 overflow-hidden">
+              {/* Dynamic background effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-violet-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-purple-600/20 rounded-full blur-xl group-hover:scale-150 transition-all duration-700"></div>
+              <div className="absolute -bottom-10 -left-10 w-16 h-16 bg-gradient-to-tr from-violet-400/20 to-purple-500/20 rounded-full blur-lg group-hover:scale-125 transition-all duration-700"></div>
+              
+              <div className="relative z-10">
+                <div className="relative mb-8">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-purple-600/20 rounded-2xl blur-md group-hover:blur-lg transition-all duration-300"></div>
+                  <div className="relative bg-gradient-to-r from-purple-500/80 to-purple-600/80 backdrop-blur-sm rounded-2xl p-6 group-hover:scale-110 group-hover:rotate-1 transition-all duration-500 border border-white/20">
+                    <img 
+                      src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=200&h=200&fit=crop&crop=center" 
+                      alt="Lab test management" 
+                      className="h-16 w-16 rounded-xl object-cover shadow-lg group-hover:shadow-xl transition-all duration-300"
+                    />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-purple-600 transition-colors">Lab Test Management</h3>
+                <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors">
+                  Order lab tests, track results, and receive detailed reports 
+                  directly through the platform.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-purple-600 transition-colors">Lab Test Management</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Order lab tests, track results, and receive detailed reports 
-                directly through the platform.
-              </p>
             </div>
 
             {/* Feature 4 */}
-            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 w-fit mb-6 group-hover:scale-110 transition-transform duration-200">
-                <UserGroupIcon className="h-8 w-8 text-white" />
+            <div className="group relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 hover:shadow-2xl transition-all duration-500 hover:scale-105 border border-white/30 hover:border-white/50 overflow-hidden">
+              {/* Dynamic background effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-orange-400/20 to-orange-600/20 rounded-full blur-xl group-hover:scale-150 transition-all duration-700"></div>
+              <div className="absolute -bottom-10 -left-10 w-16 h-16 bg-gradient-to-tr from-red-400/20 to-orange-500/20 rounded-full blur-lg group-hover:scale-125 transition-all duration-700"></div>
+              
+              <div className="relative z-10">
+                <div className="relative mb-8">
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-2xl blur-md group-hover:blur-lg transition-all duration-300"></div>
+                  <div className="relative bg-gradient-to-r from-orange-500/80 to-orange-600/80 backdrop-blur-sm rounded-2xl p-6 group-hover:scale-110 group-hover:rotate-1 transition-all duration-500 border border-white/20">
+                    <img 
+                      src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=center" 
+                      alt="Expert doctor network" 
+                      className="h-16 w-16 rounded-xl object-cover shadow-lg group-hover:shadow-xl transition-all duration-300"
+                    />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-orange-600 transition-colors">Expert Doctor Network</h3>
+                <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors">
+                  Connect with certified specialists across various medical fields 
+                  for comprehensive healthcare solutions.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-orange-600 transition-colors">Expert Doctor Network</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Connect with certified specialists across various medical fields 
-                for comprehensive healthcare solutions.
-              </p>
             </div>
 
             {/* Feature 5 */}
-            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50">
-              <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-4 w-fit mb-6 group-hover:scale-110 transition-transform duration-200">
-                <ShieldCheckIcon className="h-8 w-8 text-white" />
+            <div className="group relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 hover:shadow-2xl transition-all duration-500 hover:scale-105 border border-white/30 hover:border-white/50 overflow-hidden">
+              {/* Dynamic background effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-red-400/20 to-red-600/20 rounded-full blur-xl group-hover:scale-150 transition-all duration-700"></div>
+              <div className="absolute -bottom-10 -left-10 w-16 h-16 bg-gradient-to-tr from-pink-400/20 to-red-500/20 rounded-full blur-lg group-hover:scale-125 transition-all duration-700"></div>
+              
+              <div className="relative z-10">
+                <div className="relative mb-8">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-red-600/20 rounded-2xl blur-md group-hover:blur-lg transition-all duration-300"></div>
+                  <div className="relative bg-gradient-to-r from-red-500/80 to-red-600/80 backdrop-blur-sm rounded-2xl p-6 group-hover:scale-110 group-hover:rotate-1 transition-all duration-500 border border-white/20">
+                    <img 
+                      src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=200&h=200&fit=crop&crop=center" 
+                      alt="Security and privacy" 
+                      className="h-16 w-16 rounded-xl object-cover shadow-lg group-hover:shadow-xl transition-all duration-300"
+                    />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-red-600 transition-colors">Secure & Private</h3>
+                <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors">
+                  Your health data is protected with enterprise-grade security 
+                  and HIPAA compliance standards.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-red-600 transition-colors">Secure & Private</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Your health data is protected with enterprise-grade security 
-                and HIPAA compliance standards.
-              </p>
             </div>
 
             {/* Feature 6 */}
-            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50">
-              <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl p-4 w-fit mb-6 group-hover:scale-110 transition-transform duration-200">
-                <ClockIcon className="h-8 w-8 text-white" />
+            <div className="group relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 hover:shadow-2xl transition-all duration-500 hover:scale-105 border border-white/30 hover:border-white/50 overflow-hidden">
+              {/* Dynamic background effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-indigo-400/20 to-indigo-600/20 rounded-full blur-xl group-hover:scale-150 transition-all duration-700"></div>
+              <div className="absolute -bottom-10 -left-10 w-16 h-16 bg-gradient-to-tr from-blue-400/20 to-indigo-500/20 rounded-full blur-lg group-hover:scale-125 transition-all duration-700"></div>
+              
+              <div className="relative z-10">
+                <div className="relative mb-8">
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-indigo-600/20 rounded-2xl blur-md group-hover:blur-lg transition-all duration-300"></div>
+                  <div className="relative bg-gradient-to-r from-indigo-500/80 to-indigo-600/80 backdrop-blur-sm rounded-2xl p-6 group-hover:scale-110 group-hover:rotate-1 transition-all duration-500 border border-white/20">
+                    <img 
+                      src="https://images.unsplash.com/photo-1587560699334-cc4ff634909a?w=200&h=200&fit=crop&crop=center" 
+                      alt="24/7 customer support" 
+                      className="h-16 w-16 rounded-xl object-cover shadow-lg group-hover:shadow-xl transition-all duration-300"
+                    />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-indigo-600 transition-colors">24/7 Support</h3>
+                <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors">
+                  Get help whenever you need it with our round-the-clock 
+                  customer support team.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-indigo-600 transition-colors">24/7 Support</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Get help whenever you need it with our round-the-clock 
-                customer support team.
-              </p>
             </div>
           </div>
         </div>
@@ -695,84 +849,6 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              What Our Patients Say
-            </h2>
-            <p className="text-xl text-gray-600">
-              Real stories from real people who trust us with their healthcare
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-xl p-8 shadow-lg">
-              <div className="flex items-center mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <StarIcon key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                ))}
-              </div>
-              <p className="text-gray-600 mb-6">
-                "The appointment booking system is incredibly easy to use. I can find and book 
-                appointments with specialists in minutes. The platform has revolutionized my healthcare experience."
-              </p>
-              <div className="flex items-center">
-                <div className="bg-blue-100 rounded-full p-2 mr-4">
-                  <UserGroupIcon className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Sarah Ahmed</div>
-                  <div className="text-gray-500 text-sm">Patient</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-8 shadow-lg">
-              <div className="flex items-center mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <StarIcon key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                ))}
-              </div>
-              <p className="text-gray-600 mb-6">
-                "As a doctor, I love how this platform streamlines my practice. The patient management 
-                tools and appointment scheduling make my work so much more efficient."
-              </p>
-              <div className="flex items-center">
-                <div className="bg-green-100 rounded-full p-2 mr-4">
-                  <HeartIcon className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Dr. Yasir Junaid</div>
-                  <div className="text-gray-500 text-sm">Cardiologist</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-8 shadow-lg">
-              <div className="flex items-center mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <StarIcon key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                ))}
-              </div>
-              <p className="text-gray-600 mb-6">
-                "The lab test results feature is amazing. I can track my health metrics over time 
-                and share them with my doctor easily. It's like having a personal health assistant."
-              </p>
-              <div className="flex items-center">
-                <div className="bg-purple-100 rounded-full p-2 mr-4">
-                  <BeakerIcon className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Mohammad Rahman</div>
-                  <div className="text-gray-500 text-sm">Patient</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Contact Section */}
       <section id="contact" className="py-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 relative overflow-hidden">
@@ -845,37 +921,6 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Dynamic CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium text-white mb-6">
-            <RocketLaunchIcon className="h-4 w-4 mr-2" />
-            Start Your Journey Today
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Ready to Transform Your Healthcare Experience?
-          </h2>
-          <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-            Join thousands of patients who have already made the switch to better healthcare management.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              to="/register" 
-              className="group bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform"
-            >
-              Get Started Today
-              <ArrowRightIcon className="inline-block ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-            </Link>
-            <Link 
-              to="/login" 
-              className="group border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-indigo-600 transition-all duration-300 hover:scale-105 transform"
-            >
-              Sign In
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* Dynamic Footer */}
       <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-indigo-900 text-white py-16 relative overflow-hidden">

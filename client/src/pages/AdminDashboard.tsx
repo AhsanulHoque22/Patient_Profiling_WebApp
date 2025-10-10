@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   UsersIcon, 
@@ -10,7 +11,9 @@ import {
   CheckCircleIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  ArrowTrendingUpIcon
+  ArrowTrendingUpIcon,
+  HomeIcon,
+  HeartIcon
 } from '@heroicons/react/24/outline';
 import {
   BarChart,
@@ -43,6 +46,7 @@ interface AnalyticsData {
 }
 
 const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
 
   // Fetch system statistics
   const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({

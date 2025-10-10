@@ -113,6 +113,39 @@ const LabTestOrder = sequelize.define('LabTestOrder', {
     allowNull: true,
     comment: 'Array of uploaded test report files with metadata'
   },
+  // New unified payment fields
+  orderTotal: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    field: 'order_total',
+    comment: 'Total amount for all tests in this order'
+  },
+  orderPaid: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0,
+    allowNull: false,
+    field: 'order_paid',
+    comment: 'Total amount paid for this order'
+  },
+  orderDue: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    field: 'order_due',
+    comment: 'Remaining amount due (computed or stored)'
+  },
+  paymentThreshold: {
+    type: DataTypes.DECIMAL(3, 2),
+    allowNull: true,
+    field: 'payment_threshold',
+    comment: 'Payment threshold for sample processing (0.00-1.00), nullable to fallback to global config'
+  },
+  sampleAllowed: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+    field: 'sample_allowed',
+    comment: 'Derived flag when payment threshold is met'
+  }
 }, {
   tableName: 'lab_test_orders',
   timestamps: true,

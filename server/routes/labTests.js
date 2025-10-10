@@ -30,11 +30,13 @@ router.get('/categories', labTestController.getLabTestCategories);
 
 // Patient routes (protected)
 router.post('/orders', authenticateToken, createOrderValidation, labTestController.createLabTestOrder);
+router.post('/unified-order', authenticateToken, createOrderValidation, labTestController.createUnifiedLabTestOrder);
 router.get('/orders', authenticateToken, labTestController.getPatientLabOrders);
 router.post('/orders/:orderId/payment', authenticateToken, paymentValidation, labTestController.makePayment);
 
 // Prescription lab tests routes - using regular version for now
 router.get('/prescription-tests', authenticateToken, labTestController.getPatientPrescriptionLabTests);
+router.get('/prescription-tests-unified', authenticateToken, labTestController.getPrescriptionLabTestsForUnifiedSelection);
 router.post('/prescription-tests/:testId/payment', authenticateToken, paymentValidation, labTestController.processPrescriptionLabPayment);
 
 // Doctor routes - get patient lab reports
