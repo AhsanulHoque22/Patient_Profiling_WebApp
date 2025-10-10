@@ -19,7 +19,8 @@ import {
   ShieldCheckIcon,
   HomeIcon,
   IdentificationIcon,
-  MapPinIcon
+  MapPinIcon,
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import PrescriptionView from '../components/PrescriptionView';
@@ -108,6 +109,7 @@ const Patients: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<AppointmentMedicalRecord | null>(null);
   const [prescriptionData, setPrescriptionData] = useState<PrescriptionData | null>(null);
   const [showRecordDetail, setShowRecordDetail] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Get doctor ID first, then fetch patients
   const { data: doctorProfile } = useQuery({
@@ -127,6 +129,20 @@ const Patients: React.FC = () => {
     },
     enabled: !!doctorProfile?.id,
   });
+
+  // Filter patients based on search term
+  const filteredPatients = patients?.filter((patient) => {
+    const searchLower = searchTerm.toLowerCase();
+    const fullName = `${patient.user.firstName || ''} ${patient.user.lastName || ''}`.toLowerCase();
+    const email = (patient.user.email || '').toLowerCase();
+    const phone = (patient.user.phone || '').toLowerCase();
+    
+    return (
+      fullName.includes(searchLower) ||
+      email.includes(searchLower) ||
+      phone.includes(searchLower)
+    );
+  }) || [];
 
   const { data: medicalRecords, isLoading: recordsLoading } = useQuery<AppointmentMedicalRecord[]>({
     queryKey: ['patient-appointments', selectedPatient?.id],
@@ -360,7 +376,7 @@ const Patients: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                     <span className="text-sm font-medium">
-                      {patients ? `${patients.length} patients` : 'Loading...'}
+                      {patients ? `${searchTerm ? filteredPatients.length : patients.length} ${searchTerm ? 'filtered ' : ''}patients` : 'Loading...'}
                     </span>
                   </div>
                 </div>
@@ -368,6 +384,43 @@ const Patients: React.FC = () => {
             </div>
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-600" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search patients by name, email, or phone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 transition-all duration-200"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+            {searchTerm && (
+              <div className="mt-3 text-sm text-gray-600">
+                {filteredPatients.length > 0 ? (
+                  <span className="text-emerald-600 font-medium">
+                    {filteredPatients.length} patient{filteredPatients.length !== 1 ? 's' : ''} found
+                  </span>
+                ) : (
+                  <span className="text-amber-600">
+                    No patients found matching "{searchTerm}"
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {isLoading ? (
@@ -408,9 +461,17 @@ const Patients: React.FC = () => {
               <p className="text-gray-600 text-lg">No patients found.</p>
               <p className="text-gray-500 text-sm mt-2">Patients will appear here once they book appointments with you.</p>
             </div>
+          ) : filteredPatients.length === 0 && searchTerm ? (
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/50 text-center">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MagnifyingGlassIcon className="h-8 w-8 text-amber-600" />
+              </div>
+              <p className="text-gray-600 text-lg">No patients found matching "{searchTerm}"</p>
+              <p className="text-gray-500 text-sm mt-2">Try searching with a different term or clear the search.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {patients.map((patient) => (
+              {filteredPatients.map((patient) => (
                 <div key={patient.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group">
                   <div className="flex items-center mb-6">
                     <div className="flex-shrink-0">

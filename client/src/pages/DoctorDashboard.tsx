@@ -177,7 +177,7 @@ const DoctorDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-4xl font-bold tracking-tight mb-2">
-                  Welcome back, Dr. {user?.firstName}! 👨‍⚕️
+                  Welcome back, Dr. {user?.firstName}!
                 </h1>
                 <p className="text-indigo-100 text-lg">
                   Here's your practice overview and today's schedule.
@@ -264,7 +264,7 @@ const DoctorDashboard: React.FC = () => {
                 </div>
               </div>
               <button 
-                onClick={() => navigate('/app/appointments')}
+                onClick={() => navigate('/app/doctor-appointments')}
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md text-sm font-medium"
               >
                 <EyeIcon className="h-4 w-4" />
@@ -285,7 +285,7 @@ const DoctorDashboard: React.FC = () => {
                   <div 
                     key={appointment.id} 
                     className="group bg-gradient-to-r from-white to-blue-50 rounded-xl p-4 border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer"
-                    onClick={() => navigate('/app/appointments')}
+                    onClick={() => navigate('/app/doctor-appointments')}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div className="flex justify-between items-start">

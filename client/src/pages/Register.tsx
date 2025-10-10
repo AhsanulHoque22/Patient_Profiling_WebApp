@@ -14,7 +14,8 @@ import {
   UserGroupIcon,
   UserIcon,
   AcademicCapIcon,
-  BriefcaseIcon
+  BriefcaseIcon,
+  StarIcon
 } from '@heroicons/react/24/outline';
 import { MEDICAL_DEPARTMENTS } from '../utils/departments';
 
@@ -111,44 +112,64 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-400/20 to-blue-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-emerald-400/10 to-blue-600/10 rounded-full blur-3xl"></div>
+      </div>
+
       {/* Header */}
-      <div className="bg-white shadow-sm">
+      <div className="relative z-10 bg-white/80 backdrop-blur-sm shadow-sm border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center">
-              <HeartIcon className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">HealthCare Pro</span>
+            <Link to="/" className="flex items-center group">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                <HeartIcon className="h-6 w-6 text-white" />
+              </div>
+              <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">HealthCare Pro</span>
             </Link>
             <Link 
               to="/" 
-              className="text-gray-600 hover:text-blue-600 transition-colors"
+              className="text-gray-600 hover:text-indigo-600 transition-colors font-medium flex items-center gap-2 group"
             >
-              Back to Home
+              <span>Back to Home</span>
+              <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
       </div>
 
-      <div className="flex min-h-[calc(100vh-4rem)]">
+      <div className="flex min-h-[calc(100vh-4rem)] relative z-10">
         {/* Left Side - Registration Form */}
         <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-y-auto">
-          <div className="max-w-md w-full space-y-8">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Join HealthCare Pro
-              </h2>
-              <p className="text-gray-600">
-                Create your account and start your healthcare journey
-              </p>
-            </div>
+          <div className="max-w-md w-full">
+            {/* Registration Card */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-8 relative overflow-hidden">
+              {/* Card Background Effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-blue-50/50"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-indigo-600/10 rounded-full blur-2xl"></div>
+              
+              <div className="relative z-10">
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <HeartIcon className="h-8 w-8 text-white" />
+                  </div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    Join HealthCare Pro
+                  </h2>
+                  <p className="text-gray-600">
+                    Create your account and start your healthcare journey
+                  </p>
+                </div>
 
             <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
               <div className="space-y-4">
                 {/* Role Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Account Type
+                  <label className="block text-sm font-semibold text-gray-700 mb-4">
+                    Choose Your Account Type
                   </label>
                   <div className="grid grid-cols-3 gap-3">
                     <button
@@ -157,14 +178,17 @@ const Register: React.FC = () => {
                         setSelectedRole('patient');
                         setValue('role', 'patient');
                       }}
-                      className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      className={`group p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
                         selectedRole === 'patient'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                          ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-700 shadow-lg'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-700 bg-white/70 backdrop-blur-sm hover:shadow-md'
                       }`}
                     >
-                      <UserIcon className="h-6 w-6 mx-auto mb-1" />
-                      <span className="text-sm font-medium">Patient</span>
+                      <UserIcon className={`h-7 w-7 mx-auto mb-2 transition-colors duration-300 ${
+                        selectedRole === 'patient' ? 'text-indigo-600' : 'text-gray-500 group-hover:text-gray-700'
+                      }`} />
+                      <span className="text-sm font-semibold block">Patient</span>
+                      <span className="text-xs text-gray-500 mt-1 block">Seek medical care</span>
                     </button>
                     <button
                       type="button"
@@ -172,14 +196,17 @@ const Register: React.FC = () => {
                         setSelectedRole('doctor');
                         setValue('role', 'doctor');
                       }}
-                      className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      className={`group p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
                         selectedRole === 'doctor'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                          ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-700 shadow-lg'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-700 bg-white/70 backdrop-blur-sm hover:shadow-md'
                       }`}
                     >
-                      <BriefcaseIcon className="h-6 w-6 mx-auto mb-1" />
-                      <span className="text-sm font-medium">Doctor</span>
+                      <BriefcaseIcon className={`h-7 w-7 mx-auto mb-2 transition-colors duration-300 ${
+                        selectedRole === 'doctor' ? 'text-indigo-600' : 'text-gray-500 group-hover:text-gray-700'
+                      }`} />
+                      <span className="text-sm font-semibold block">Doctor</span>
+                      <span className="text-xs text-gray-500 mt-1 block">Provide medical care</span>
                     </button>
                     <button
                       type="button"
@@ -187,14 +214,17 @@ const Register: React.FC = () => {
                         setSelectedRole('admin');
                         setValue('role', 'admin');
                       }}
-                      className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      className={`group p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
                         selectedRole === 'admin'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                          ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-700 shadow-lg'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-700 bg-white/70 backdrop-blur-sm hover:shadow-md'
                       }`}
                     >
-                      <AcademicCapIcon className="h-6 w-6 mx-auto mb-1" />
-                      <span className="text-sm font-medium">Admin</span>
+                      <AcademicCapIcon className={`h-7 w-7 mx-auto mb-2 transition-colors duration-300 ${
+                        selectedRole === 'admin' ? 'text-indigo-600' : 'text-gray-500 group-hover:text-gray-700'
+                      }`} />
+                      <span className="text-sm font-semibold block">Admin</span>
+                      <span className="text-xs text-gray-500 mt-1 block">Manage the system</span>
                     </button>
                   </div>
                   
@@ -205,39 +235,39 @@ const Register: React.FC = () => {
                 {/* Basic Information */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700 mb-3">
                       First Name
                     </label>
                     <input
                       {...register('firstName', { required: 'First name is required' })}
                       type="text"
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                        errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+                      className={`w-full px-4 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 bg-white/70 backdrop-blur-sm ${
+                        errors.firstName ? 'border-red-400 bg-red-50/70' : 'border-gray-200 hover:border-gray-300'
                       }`}
                       placeholder="John"
                     />
                     {errors.firstName && (
-                      <p className="mt-2 text-sm text-red-600 flex items-center">
-                        <span className="mr-1">⚠️</span>
+                      <p className="mt-3 text-sm text-red-600 flex items-center bg-red-50/70 rounded-lg px-3 py-2">
+                        <span className="mr-2">⚠️</span>
                         {errors.firstName.message}
                       </p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700 mb-3">
                       Last Name
                     </label>
                     <input
                       {...register('lastName', { required: 'Last name is required' })}
                       type="text"
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                        errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+                      className={`w-full px-4 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 bg-white/70 backdrop-blur-sm ${
+                        errors.lastName ? 'border-red-400 bg-red-50/70' : 'border-gray-200 hover:border-gray-300'
                       }`}
                       placeholder="Doe"
                     />
                     {errors.lastName && (
-                      <p className="mt-2 text-sm text-red-600 flex items-center">
-                        <span className="mr-1">⚠️</span>
+                      <p className="mt-3 text-sm text-red-600 flex items-center bg-red-50/70 rounded-lg px-3 py-2">
+                        <span className="mr-2">⚠️</span>
                         {errors.lastName.message}
                       </p>
                     )}
@@ -245,7 +275,7 @@ const Register: React.FC = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-3">
                     Email Address
                   </label>
                   <input
@@ -257,14 +287,14 @@ const Register: React.FC = () => {
                       }
                     })}
                     type="email"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                      errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+                    className={`w-full px-4 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 bg-white/70 backdrop-blur-sm ${
+                      errors.email ? 'border-red-400 bg-red-50/70' : 'border-gray-200 hover:border-gray-300'
                     }`}
                     placeholder="john.doe@example.com"
                   />
                   {errors.email && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center">
-                      <span className="mr-1">⚠️</span>
+                    <p className="mt-3 text-sm text-red-600 flex items-center bg-red-50/70 rounded-lg px-3 py-2">
+                      <span className="mr-2">⚠️</span>
                       {errors.email.message}
                     </p>
                   )}
@@ -272,7 +302,7 @@ const Register: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-3">
                       Password
                     </label>
                     <div className="relative">
@@ -285,32 +315,32 @@ const Register: React.FC = () => {
                           }
                         })}
                         type={showPassword ? 'text' : 'password'}
-                        className={`w-full px-4 py-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                          errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+                        className={`w-full px-4 py-4 pr-12 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 bg-white/70 backdrop-blur-sm ${
+                          errors.password ? 'border-red-400 bg-red-50/70' : 'border-gray-200 hover:border-gray-300'
                         }`}
                         placeholder="••••••••"
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-xl transition-colors duration-200"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
-                          <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                          <EyeSlashIcon className="h-5 w-5 text-gray-500 hover:text-gray-700" />
                         ) : (
-                          <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                          <EyeIcon className="h-5 w-5 text-gray-500 hover:text-gray-700" />
                         )}
                       </button>
                     </div>
                     {errors.password && (
-                      <p className="mt-2 text-sm text-red-600 flex items-center">
-                        <span className="mr-1">⚠️</span>
+                      <p className="mt-3 text-sm text-red-600 flex items-center bg-red-50/70 rounded-lg px-3 py-2">
+                        <span className="mr-2">⚠️</span>
                         {errors.password.message}
                       </p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-3">
                       Confirm Password
                     </label>
                     <div className="relative">
@@ -320,26 +350,26 @@ const Register: React.FC = () => {
                           validate: (value, formValues) => value === formValues.password || 'Passwords do not match'
                         })}
                         type={showConfirmPassword ? 'text' : 'password'}
-                        className={`w-full px-4 py-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                          errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+                        className={`w-full px-4 py-4 pr-12 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 bg-white/70 backdrop-blur-sm ${
+                          errors.confirmPassword ? 'border-red-400 bg-red-50/70' : 'border-gray-200 hover:border-gray-300'
                         }`}
                         placeholder="••••••••"
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-xl transition-colors duration-200"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       >
                         {showConfirmPassword ? (
-                          <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                          <EyeSlashIcon className="h-5 w-5 text-gray-500 hover:text-gray-700" />
                         ) : (
-                          <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                          <EyeIcon className="h-5 w-5 text-gray-500 hover:text-gray-700" />
                         )}
                       </button>
                     </div>
                     {errors.confirmPassword && (
-                      <p className="mt-2 text-sm text-red-600 flex items-center">
-                        <span className="mr-1">⚠️</span>
+                      <p className="mt-3 text-sm text-red-600 flex items-center bg-red-50/70 rounded-lg px-3 py-2">
+                        <span className="mr-2">⚠️</span>
                         {errors.confirmPassword.message}
                       </p>
                     )}
@@ -482,102 +512,126 @@ const Register: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="group relative w-full flex justify-center items-center py-4 px-6 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-700 hover:via-blue-700 hover:to-indigo-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02] transform"
                 >
                   {isLoading ? (
                     <div className="flex items-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Creating Account...
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
+                      <span className="text-lg">Creating Account...</span>
                     </div>
                   ) : (
                     <div className="flex items-center">
-                      Create Account
-                      <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      <span className="text-lg">Create Account</span>
+                      <ArrowRightIcon className="ml-3 h-6 w-6 group-hover:translate-x-1 transition-transform duration-200" />
                     </div>
                   )}
                 </button>
               </div>
 
-              <div className="text-center">
+              <div className="text-center pt-4 border-t border-gray-200/50">
                 <p className="text-sm text-gray-600">
                   Already have an account?{' '}
                   <Link
                     to="/login"
-                    className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                    className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors duration-200 hover:underline"
                   >
                     Sign in here
                   </Link>
                 </p>
               </div>
-            </form>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Right Side - Benefits */}
-        <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center bg-gradient-to-br from-green-600 to-blue-600 p-8">
-          <div className="max-w-md text-white">
-            <div className="mb-8">
-              <h3 className="text-2xl font-bold mb-4">
-                Join Our Healthcare Community
-              </h3>
-              <p className="text-green-100 text-lg">
-                Become part of a trusted network of patients and healthcare professionals
+        <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-blue-600 to-indigo-700"></div>
+          <div className="absolute inset-0 bg-gradient-to-tr from-blue-800/20 via-transparent to-indigo-800/20"></div>
+          
+          {/* Decorative Elements */}
+          <div className="absolute top-20 right-20 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-20 left-20 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+          
+          <div className="relative z-10 max-w-md text-white p-8">
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                  <HeartIcon className="h-7 w-7 text-white" />
+                </div>
+                <h3 className="text-3xl font-bold">
+                  Join Our Healthcare Community
+                </h3>
+              </div>
+              <p className="text-blue-100 text-lg leading-relaxed">
+                Become part of a trusted network of patients and healthcare professionals. Experience seamless, secure, and comprehensive healthcare management.
               </p>
             </div>
 
             <div className="space-y-6">
-              <div className="flex items-start">
-                <div className="bg-white bg-opacity-20 rounded-lg p-3 mr-4">
+              <div className="group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-300">
+                <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
                   <UserIcon className="h-6 w-6" />
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">For Patients</h4>
-                  <p className="text-green-100 text-sm">
-                    Access quality healthcare, manage appointments, and track your health records
+                  <h4 className="font-bold mb-2 text-lg">For Patients</h4>
+                  <p className="text-blue-100 text-sm leading-relaxed">
+                    Access quality healthcare, manage appointments, and track your health records seamlessly
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start">
-                <div className="bg-white bg-opacity-20 rounded-lg p-3 mr-4">
+              <div className="group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-300">
+                <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
                   <BriefcaseIcon className="h-6 w-6" />
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">For Doctors</h4>
-                  <p className="text-green-100 text-sm">
-                    Grow your practice, manage patients, and provide quality care
+                  <h4 className="font-bold mb-2 text-lg">For Doctors</h4>
+                  <p className="text-blue-100 text-sm leading-relaxed">
+                    Grow your practice, manage patients efficiently, and provide exceptional quality care
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start">
-                <div className="bg-white bg-opacity-20 rounded-lg p-3 mr-4">
+              <div className="group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-300">
+                <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
                   <ShieldCheckIcon className="h-6 w-6" />
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Secure Platform</h4>
-                  <p className="text-green-100 text-sm">
-                    Your data is protected with enterprise-grade security
+                  <h4 className="font-bold mb-2 text-lg">Secure Platform</h4>
+                  <p className="text-blue-100 text-sm leading-relaxed">
+                    Your data is protected with enterprise-grade security and HIPAA compliance
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start">
-                <div className="bg-white bg-opacity-20 rounded-lg p-3 mr-4">
+              <div className="group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-300">
+                <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
                   <CheckCircleIcon className="h-6 w-6" />
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Easy to Use</h4>
-                  <p className="text-green-100 text-sm">
-                    Intuitive interface designed for seamless healthcare management
+                  <h4 className="font-bold mb-2 text-lg">Easy to Use</h4>
+                  <p className="text-blue-100 text-sm leading-relaxed">
+                    Intuitive interface designed for seamless healthcare management experience
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 p-4 bg-white bg-opacity-10 rounded-lg">
-              <p className="text-sm text-green-100">
-                <strong>Join 10,000+ users</strong> who trust us with their healthcare needs
+            <div className="mt-10 p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <StarIcon className="h-5 w-5 text-yellow-300" />
+                </div>
+                <p className="font-bold text-lg">
+                  Trusted by Thousands
+                </p>
+              </div>
+              <p className="text-blue-100 text-sm">
+                Join over <strong>10,000+ users</strong> and <strong>500+ healthcare providers</strong> who trust our platform
               </p>
             </div>
           </div>

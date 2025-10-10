@@ -22,7 +22,8 @@ import {
   StarIcon,
   ArrowPathIcon,
   ChartBarIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import PrescriptionInterface from '../components/PrescriptionInterface';
@@ -79,6 +80,8 @@ const DoctorAppointments: React.FC = () => {
     timeBlock: '09:00-12:00'
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchDate, setSearchDate] = useState('');
 
   const timeBlocks = [
     { value: '09:00-12:00', label: 'Morning Chamber (9:00 AM - 12:00 PM)' },
@@ -135,6 +138,27 @@ const DoctorAppointments: React.FC = () => {
       filtered = appointments.filter(app => app.status === selectedFilter);
     }
     
+    // Apply search filter (patient name, email, phone)
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(app => {
+        const fullName = `${app.patient.user.firstName || ''} ${app.patient.user.lastName || ''}`.toLowerCase();
+        const email = (app.patient.user.email || '').toLowerCase();
+        const phone = (app.patient.user.phone || '').toLowerCase();
+        
+        return (
+          fullName.includes(searchLower) ||
+          email.includes(searchLower) ||
+          phone.includes(searchLower)
+        );
+      });
+    }
+    
+    // Apply date filter
+    if (searchDate) {
+      filtered = filtered.filter(app => app.appointmentDate === searchDate);
+    }
+    
     console.log('🔍 After filtering:', filtered.length, 'appointments');
     
     // Backend now provides data in DESC order, but let's ensure frontend sorting too
@@ -160,7 +184,7 @@ const DoctorAppointments: React.FC = () => {
     })));
     
     setFilteredAppointments(filtered);
-  }, [selectedFilter, appointments]);
+  }, [selectedFilter, appointments, searchTerm, searchDate]);
 
   // Approve appointment
   const handleApprove = async (appointmentId: number) => {
@@ -488,6 +512,81 @@ Do you want to proceed?`;
             </div>
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Patient Search */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-600" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search by patient name, email, or phone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 transition-all duration-200"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Date Filter */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <CalendarIcon className="h-5 w-5 text-gray-600" />
+                </div>
+                <input
+                  type="date"
+                  value={searchDate}
+                  onChange={(e) => setSearchDate(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-gray-900 transition-all duration-200"
+                />
+                {searchDate && (
+                  <button
+                    onClick={() => setSearchDate('')}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {/* Search Results Summary */}
+            {(searchTerm || searchDate) && (
+              <div className="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
+                <div className="flex items-center gap-2 text-sm">
+                  <MagnifyingGlassIcon className="h-4 w-4 text-indigo-600" />
+                  <span className="text-gray-700">
+                    {filteredAppointments.length > 0 ? (
+                      <span className="text-emerald-600 font-medium">
+                        {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''} found
+                      </span>
+                    ) : (
+                      <span className="text-amber-600">
+                        No appointments found
+                      </span>
+                    )}
+                    {(searchTerm || searchDate) && (
+                      <span className="text-gray-600">
+                        {searchTerm && ` matching "${searchTerm}"`}
+                        {searchTerm && searchDate && ' and '}
+                        {searchDate && ` on ${new Date(searchDate).toLocaleDateString()}`}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Filters */}
@@ -1121,10 +1220,6 @@ Do you want to proceed?`;
                     {/* Right Column - Prescription Interface (3/5 width on large screens) */}
                     <div className="lg:col-span-3 flex flex-col">
                       <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-4 flex-1 flex flex-col border border-emerald-200/50">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                          <DocumentTextIcon className="h-5 w-5 text-emerald-600" />
-                          Prescription Management
-                        </h3>
                         <div className="flex-1 min-h-0 overflow-y-auto">
                           <PrescriptionInterface
                             appointmentId={selectedAppointmentForPrescription.id}
@@ -1141,10 +1236,6 @@ Do you want to proceed?`;
                   /* Regular appointments: Full-width prescription */
                   <div className="h-full">
                     <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-6 h-full flex flex-col border border-emerald-200/50">
-                      <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <DocumentTextIcon className="h-6 w-6 text-emerald-600" />
-                        Prescription Management
-                      </h3>
                       <div className="flex-1 min-h-0 overflow-y-auto">
                         <PrescriptionInterface
                           appointmentId={selectedAppointmentForPrescription.id}
